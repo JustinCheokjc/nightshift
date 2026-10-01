@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Idle compute platform: mockups</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#EDF2F3;--surf:#fff;--ink:#14303A;--mut:#5B7480;--line:#D5DFE3;--idle:#1F8A7D;--use:#B9C7CE;--sleep:#E3EAED;--amber:#C98A0B;--bad:#B4442F;--on:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1D23;--surf:#152A32;--ink:#E4EEF0;--mut:#8FA8B2;--line:#25404A;--idle:#3CBFAE;--use:#4A6672;--sleep:#1E343C;--amber:#E0A93A;--bad:#E27B67;--on:#0E1D23}}
+:root[data-theme="dark"]{--bg:#0E1D23;--surf:#152A32;--ink:#E4EEF0;--mut:#8FA8B2;--line:#25404A;--idle:#3CBFAE;--use:#4A6672;--sleep:#1E343C;--amber:#E0A93A;--bad:#E27B67;--on:#0E1D23}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "Schibsted Grotesk",system-ui,sans-serif}
+header{padding:20px 20px 0;max-width:1100px;margin:0 auto}
+h1{font-size:22px;margin:0 0 2px;font-weight:700}
+.sub{color:var(--mut);margin:0 0 14px;font-size:14px}
+nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+nav button{font:inherit;border:1px solid var(--line);background:var(--surf);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap}
+nav button[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+nav button:focus-visible,input:focus-visible,select:focus-visible,.btn:focus-visible{outline:2px solid var(--idle);outline-offset:2px}
+main{max-width:1100px;margin:0 auto;padding:16px 20px 40px}
+section{display:none}section.on{display:block}
+.note{font-size:13px;color:var(--mut);margin:0 0 14px}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:16px}
+.card h2{font-size:15px;margin:0 0 10px;font-weight:700}
+.kpi b{display:block;font-size:26px;line-height:1.1}
+.kpi span{color:var(--mut);font-size:13px}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--mut);font-weight:500}
+.strip{display:flex;height:16px;border-radius:4px;overflow:hidden;min-width:240px;gap:1px}
+.strip i{flex:1;background:var(--sleep)}.strip i.u{background:var(--use)}.strip i.d{background:var(--idle)}
+.axis{display:flex;justify-content:space-between;color:var(--mut);font-size:11px;min-width:240px;margin-top:2px}
+.key{display:flex;gap:14px;font-size:12px;color:var(--mut);margin:8px 0 0;flex-wrap:wrap}
+.key s{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;text-decoration:none;vertical-align:-1px}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;border:1px solid var(--line)}
+.pill.i{color:var(--idle);border-color:var(--idle)}.pill.w{color:var(--amber);border-color:var(--amber)}.pill.b{color:var(--bad);border-color:var(--bad)}
+.bars{display:flex;align-items:flex-end;gap:3px;height:120px}
+.bars i{flex:1;background:var(--idle);border-radius:2px 2px 0 0;min-height:2px}
+.hm{display:grid;grid-template-columns:34px repeat(24,1fr);gap:2px;font-size:11px;color:var(--mut);min-width:420px}
+.hm i{height:16px;border-radius:2px;background:var(--idle)}
+.btn{font:inherit;border:0;background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;cursor:pointer}
+.btn.o{background:transparent;color:var(--ink);border:1px solid var(--line)}
+label{display:block;font-size:13px;color:var(--mut);margin:12px 0 4px}
+input,select{font:inherit;width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surf);color:var(--ink)}
+input[type=range]{padding:0}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.tray{max-width:340px;background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--idle);display:inline-block;margin-right:6px}
+.msg{padding:10px 12px;border-radius:8px;margin-top:14px;font-size:14px}
+.msg.ok{border:1px solid var(--idle);color:var(--idle)}.msg.no{border:1px solid var(--bad);color:var(--bad)}
+.ph{border:1px dashed var(--amber);color:var(--amber);border-radius:8px;padding:6px 10px;font-size:13px;display:inline-block;margin-bottom:12px}
+</style>
+</head>
+<body>
+<header>
+<h1>Idle compute platform</h1>
+<p class="sub">Clickable mockups with sample data. Not connected to real devices.</p>
+<nav role="tablist" id="tabs"></nav>
+</header>
+<main>
+
+<section id="contrib">
+<p class="note">Contributor dashboard (Phase 1). Each row shows the last 24 hours: what your laptop was doing, hour by hour.</p>
+<div class="grid g4">
+<div class="card kpi"><b>5.8 h</b><span>Usable idle today</span></div>
+<div class="card kpi"><b>46 core-h</b><span>Capacity this week</span></div>
+<div class="card kpi"><b>S$3.10</b><span>Est. potential earnings</span></div>
+<div class="card kpi"><b>S$1.40</b><span>Est. electricity cost</span></div>
+</div>
+<div class="card" style="margin-top:14px"><h2>Your devices</h2>
+<div class="scroll"><table><thead><tr><th>Device</th><th>Status</th><th>Last 24 hours</th></tr></thead><tbody id="devs"></tbody></table></div>
+<div class="key"><span><s style="background:var(--idle)"></s>Usable idle</span><span><s style="background:var(--use)"></s>In use</span><span><s style="background:var(--sleep)"></s>Asleep or off</span></div>
+</div>
+<div class="grid g2" style="margin-top:14px">
+<div class="card"><h2>Controls</h2>
+<label for="th">Count as idle after (minutes without input)</label><input id="th" type="range" min="1" max="30" value="5" oninput="thv.textContent=this.value+' min'"><div id="thv" class="note">5 min</div>
+<label for="bw">Blackout window</label><select id="bw"><option>None</option><option>9:00 to 18:00 weekdays</option><option>Custom...</option></select>
+<div class="row" style="margin-top:14px"><button class="btn">Pause all devices</button><button class="btn o">Delete my data</button></div></div>
+<div class="card"><h2>Electricity rate</h2><label for="rate">Your rate (S$ per kWh)</label><input id="rate" value="0.31" inputmode="decimal">
+<p class="note" style="margin-top:12px">Used to estimate what running your laptop while idle costs you each month.</p></div>
+</div>
+</section>
+
+<section id="oper">
+<p class="note">Operator dashboard (Phase 1). Answers one question: how many usable core-hours can we promise a buyer?</p>
+<div class="grid g4">
+<div class="card kpi"><b>142</b><span>Devices enrolled</span></div>
+<div class="card kpi"><b>61</b><span>Online now</span></div>
+<div class="card kpi"><b>38</b><span>Usable idle now</span></div>
+<div class="card kpi"><b>1,204</b><span>Core-hours forecast, next 24 h</span></div>
+</div>
+<div class="grid g2" style="margin-top:14px">
+<div class="card"><h2>Forecast: usable devices by hour of day</h2><div class="bars" id="fc"></div><div class="axis" style="min-width:0"><span>0:00</span><span>6:00</span><span>12:00</span><span>18:00</span><span>23:00</span></div><p class="note" style="margin:8px 0 0">Median over the last 30 days. Peak supply is overnight.</p></div>
+<div class="card"><h2>Hardware mix</h2><div id="mix"></div></div>
+</div>
+<div class="grid g2" style="margin-top:14px">
+<div class="card"><h2>Weekly idle pattern</h2><div class="scroll"><div class="hm" id="hm"></div></div></div>
+<div class="card"><h2>Economics</h2>
+<label for="pr">Price per core-hour (S$)</label><input id="pr" type="range" min="1" max="10" value="4" oninput="eco()"><div class="note" id="prv"></div>
+<table><tbody><tr><td>Projected monthly revenue</td><td id="rev"></td></tr><tr><td>Contributor payout (60%)</td><td id="pay"></td></tr><tr><td>Est. electricity cost per device</td><td>S$1.40</td></tr><tr><td>Net per device / month</td><td id="net"></td></tr></tbody></table></div>
+</div>
+<div class="card" style="margin-top:14px"><h2>Attention</h2>
+<p style="margin:0 0 6px"><span class="pill w">12 devices</span> stopped reporting in the last 7 days</p>
+<p style="margin:0"><span class="pill b">3 devices</span> failed the benchmark check</p></div>
+</section>
+
+<section id="sec">
+<p class="note">Security panel. The agent reports simple yes/no posture checks (never files or browsing), and the backend turns them into flags. Try the actions on the right of each row.</p>
+<div class="grid g4" id="sk"></div>
+<div class="card" style="margin-top:14px"><div class="row"><h2 style="margin:0">Flagged devices</h2><select id="sf" style="width:auto" onchange="srender()"><option value="">All severities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></div>
+<div class="scroll"><table><thead><tr><th>Device</th><th>Category</th><th>Severity</th><th>Reason</th><th>First seen</th><th>Status</th><th>Action</th></tr></thead><tbody id="st"></tbody></table></div></div>
+<div class="grid g2" style="margin-top:14px">
+<div class="card"><h2>Flags by category</h2><div id="sc"></div>
+<h2 style="margin-top:16px">Response by severity</h2><table><tbody><tr><td><span class="pill">Low</span></td><td>Note to contributor, no restriction</td></tr><tr><td><span class="pill w">Medium</span></td><td>Fix prompt, excluded from sensitive jobs</td></tr><tr><td><span class="pill b">High</span></td><td>Device paused, operator review</td></tr><tr><td><span class="pill b">Critical</span></td><td>Token revoked, jobs stopped, incident logged</td></tr></tbody></table></div>
+<div class="card"><h2>Contributor view: fix it</h2>
+<div class="msg no" style="margin-top:0">Your firewall is off on Laptop 1.</div>
+<p class="note" style="margin:10px 0">Turn it on in Windows Security, then open Firewall and network protection. This flag clears automatically when we next sync.</p>
+<p class="note" style="margin:0 0 12px">Until then, this device is kept out of sensitive jobs. Your earnings are not affected.</p>
+<div class="row"><button class="btn" onclick="this.textContent='Checking... firewall now on';this.disabled=true">Check again</button><button class="btn o">How to fix</button></div></div>
+</div>
+<div class="grid g2" style="margin-top:14px">
+<div class="card"><h2>Rules</h2>
+<label for="r_a">Flag if OS has no security update for (days)</label><input id="r_a" value="90" inputmode="numeric">
+<label for="r_b">Flag if agent stops reporting for (hours)</label><input id="r_b" value="6" inputmode="numeric">
+<label for="r_c">Flag if idle CPU stays above (%)</label><input id="r_c" value="30" inputmode="numeric">
+<label for="r_d">Max devices per account or IP</label><input id="r_d" value="3" inputmode="numeric">
+<div class="row" style="margin-top:14px"><button class="btn" onclick="slogadd('Operator','Updated flag rules','All');this.textContent='Saved'">Save rules</button></div></div>
+<div class="card"><h2>Audit log</h2><div class="scroll"><table><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Target</th></tr></thead><tbody id="sl"></tbody></table></div></div>
+</div>
+</section>
+
+<section id="agent">
+<p class="note">Desktop agent (Phase 1). A small tray window and a consent screen. It only reports device state; it runs no jobs in this phase.</p>
+<div class="grid g2">
+<div><div class="tray"><div class="row"><b>Idle Compute</b><span class="pill i"><span class="dot"></span>Idle</span></div>
+<p class="note" style="margin:10px 0">Your laptop counts as idle. Sharing status only. No jobs running.</p>
+<table><tbody><tr><td>Plugged in</td><td>Yes</td></tr><tr><td>CPU load</td><td>6%</td></tr><tr><td>Idle for</td><td>42 min</td></tr><tr><td>Last sync</td><td>1 min ago</td></tr></tbody></table>
+<div class="row" style="margin-top:14px"><button class="btn">Pause for 1 hour</button><button class="btn o">Open dashboard</button></div></div></div>
+<div class="card"><h2>Before you install</h2>
+<p><b>We collect:</b> whether the laptop is on, plugged in and idle; CPU, GPU and memory load; hardware specs; network type.</p>
+<p><b>We never collect:</b> files, browsing, keystrokes, screen contents or location.</p>
+<p>You can pause, uninstall or delete your data at any time.</p>
+<label><input type="checkbox" style="width:auto;margin-right:8px" checked>I am 18 or older and have read the consent form</label>
+<div class="row" style="margin-top:14px"><button class="btn">Accept and install</button><button class="btn o">Cancel</button></div></div>
+</div>
+</section>
+
+<section id="signup">
+<p class="note">Pilot sign-up with the eligibility check. Try answering "Yes" to the managed-device question.</p>
+<div class="grid g2"><div class="card"><h2>Join the pilot</h2>
+<label for="os">Operating system</label><select id="os" onchange="chk()"><option value="ok">Windows 11</option><option value="ok">Windows 10</option><option value="ok">macOS 12 or newer</option><option value="no">Chromebook or tablet</option></select>
+<label for="ram">Memory</label><select id="ram" onchange="chk()"><option value="ok">8 GB or more</option><option value="no">Less than 8 GB</option></select>
+<label for="mg">Provided or managed by your school or employer?</label><select id="mg" onchange="chk()"><option value="ok">No</option><option value="no">Yes</option></select>
+<label for="ad">Do you have admin rights on this laptop?</label><select id="ad" onchange="chk()"><option value="ok">Yes</option><option value="no">No</option></select>
+<label for="pl">How often is it plugged in?</label><select id="pl"><option>Most nights</option><option>Some nights</option><option>Rarely</option></select>
+<div id="res" class="msg ok"></div>
+<div class="row" style="margin-top:14px"><button class="btn" id="go">Continue to consent form</button></div></div>
+<div class="card"><h2>What you get</h2><p>S$20 after 30 days, plus a dashboard of your laptop's idle patterns. Pause or leave any time.</p><h2 style="margin-top:16px">Not eligible</h2><p class="note">Work or school-managed laptops, shared computers, virtual machines, Chromebooks, tablets and phones.</p></div></div>
+</section>
+
+<section id="wallet">
+<p class="note">Contributor wallet. In Phase 1 it shows the pilot payment and estimated earnings; real job earnings start in Phase 3. Try Withdraw.</p>
+<div class="grid g4">
+<div class="card kpi"><b id="wa">S$32.40</b><span>Available to withdraw</span></div>
+<div class="card kpi"><b>S$6.20</b><span>Pending (released after 7 days)</span></div>
+<div class="card kpi"><b id="wp">S$20.00</b><span>Paid out to date</span></div>
+<div class="card kpi"><b>S$58.60</b><span>Lifetime earned</span></div>
+</div>
+<div class="grid g2" style="margin-top:14px">
+<div class="card"><h2>Withdraw</h2>
+<label for="wm">Payout method</label><select id="wm"><option>PayNow (mobile number ending 4821)</option><option>Bank transfer</option></select>
+<label for="wx">Amount (S$)</label><input id="wx" value="30" inputmode="decimal">
+<p class="note" style="margin-top:8px">Minimum withdrawal S$10. Payouts arrive in 1 to 3 working days.</p>
+<div class="row" style="margin-top:8px"><button class="btn" id="wb" onclick="wd()">Withdraw</button></div><div id="wr" class="note" role="status"></div></div>
+<div class="card"><h2>Earnings by device (30 days)</h2><div id="wdev"></div>
+<h2 style="margin-top:16px">Operator view</h2><table><tbody><tr><td>Total owed to contributors</td><td>S$3,870</td></tr><tr><td>Pending payouts</td><td>S$412</td></tr><tr><td>Flagged, held for review</td><td>S$38</td></tr></tbody></table></div>
+</div>
+<div class="card" style="margin-top:14px"><h2>Transactions</h2><div class="scroll"><table><thead><tr><th>Date</th><th>Description</th><th>Status</th><th>Amount</th></tr></thead><tbody id="tx"></tbody></table></div></div>
+</section>
+
+<section id="price">
+<p class="note">Snapshot of published GPU rental prices, late September 2026 (US$ per GPU-hour, what buyers pay). Prices move daily, so treat these as a reference and check the live trackers.</p>
+<div class="grid g2">
+<div class="card"><h2>Price list</h2><div class="scroll"><table><thead><tr><th>GPU</th><th>Typical</th><th>Cheapest</th><th>Managed</th></tr></thead><tbody>
+<tr><td>RTX 4090 (24 GB)</td><td>0.44</td><td>0.14 (spot)</td><td>0.34 to 0.69</td></tr>
+<tr><td>RTX 5090 (32 GB)</td><td>0.63</td><td>0.21</td><td>n/a</td></tr>
+<tr><td>A100</td><td>1.76</td><td>0.47 (spot)</td><td>1.19 to 1.38</td></tr>
+<tr><td>H100</td><td>3.25</td><td>1.79</td><td>2.50 to 2.79</td></tr>
+<tr><td>H200</td><td>4.40</td><td>n/a</td><td>n/a</td></tr></tbody></table></div>
+<p class="note" style="margin:10px 0 0">Sources: AIMultiple index (22 Sep), FastGPU (27 Sep), Aliteq (24 Sep), GPUPerHour. Live: vast.ai/pricing, gpuperhour.com, fastgpu.co.</p></div>
+<div class="card"><h2>Channel comparison</h2><div class="scroll"><table><thead><tr><th>Channel</th><th>Host fee</th><th>Effort</th></tr></thead><tbody>
+<tr><td>Vast.ai marketplace</td><td>10 to 15%</td><td>High</td></tr>
+<tr><td>RunPod community</td><td>Varies</td><td>Medium</td></tr>
+<tr><td>Salad</td><td>20 to 25%</td><td>Low</td></tr>
+<tr><td>Your own marketplace</td><td>You decide</td><td>Very high</td></tr></tbody></table></div>
+<p class="note" style="margin:10px 0 0">Verified, reliable hosts earn far more than unverified ones on the same card.</p></div>
+</div>
+<div class="card" style="margin-top:14px"><h2>Earnings estimator (per device, per month)</h2>
+<p class="note">Presets use the prices above. The laptop preset is a placeholder assumption you should replace with measured data from the pilot.</p>
+<div class="grid g2"><div>
+<label for="pg">GPU</label><select id="pg" onchange="pgset()"><option value="0.44|400">RTX 4090 (typical price)</option><option value="0.14|400">RTX 4090 (cheapest listing)</option><option value="0.63|450">RTX 5090</option><option value="1.76|300">A100</option><option value="3.25|700">H100</option><option value="0.10|90" selected>Laptop GPU (assumption)</option></select>
+<label for="ppr">Price buyers pay (US$ per GPU-hour)</label><input id="ppr" value="0.10" inputmode="decimal" oninput="pcalc()">
+<label for="pw">Power draw under load (watts)</label><input id="pw" value="90" inputmode="numeric" oninput="pcalc()">
+<label for="ph">Usable idle hours per day: <span id="phv">6</span></label><input id="ph" type="range" min="1" max="24" value="6" oninput="pcalc()">
+<label for="pu">Share of those hours with paid work: <span id="puv">75</span>%</label><input id="pu" type="range" min="10" max="100" value="75" oninput="pcalc()">
+<label for="pf">Platform fee: <span id="pfv">15</span>%</label><input id="pf" type="range" min="0" max="30" value="15" oninput="pcalc()">
+<label for="pe">Electricity (US$ per kWh)</label><input id="pe" value="0.25" inputmode="decimal" oninput="pcalc()"></div>
+<div><table><tbody>
+<tr><td>Paid GPU-hours</td><td id="r1"></td></tr>
+<tr><td>Gross revenue</td><td id="r2"></td></tr>
+<tr><td>Platform fee</td><td id="r3"></td></tr>
+<tr><td>Electricity cost</td><td id="r4"></td></tr>
+<tr><td><b>Net per month</b></td><td id="r5"></td></tr></tbody></table>
+<div id="rm" class="msg" style="margin-top:14px"></div>
+<p class="note" style="margin-top:12px">Excludes wear on the laptop, cooling, and any payout minimums. Real earnings depend on demand and verified reliability.</p></div></div>
+</div>
+</section>
+
+<section id="buyer">
+<span class="ph">Phase 3 concept. Not part of the first build.</span>
+<div class="grid g4">
+<div class="card kpi"><b>3</b><span>Jobs running</span></div>
+<div class="card kpi"><b>98.2%</b><span>Task success rate</span></div>
+<div class="card kpi"><b>S$212</b><span>Spend this month</span></div>
+<div class="card kpi"><b>~4 h</b><span>Est. completion, current job</span></div>
+</div>
+<div class="grid g2" style="margin-top:14px">
+<div class="card"><h2>Submit a job</h2>
+<label for="wl">Workload type</label><select id="wl"><option>Batch rendering</option><option>Data processing</option><option>Model evaluation</option></select>
+<label for="bd">Budget cap (S$)</label><input id="bd" value="150">
+<label for="dl">Deadline</label><select id="dl"><option>Within 24 hours</option><option>Within 3 days</option><option>Flexible (lowest price)</option></select>
+<div class="row" style="margin-top:14px"><button class="btn">Get price estimate</button></div></div>
+<div class="card"><h2>Recent jobs</h2><div class="scroll"><table><thead><tr><th>Job</th><th>Status</th><th>Tasks</th><th>Cost</th></tr></thead><tbody>
+<tr><td>Render batch 14</td><td><span class="pill i">Running</span></td><td>812 / 1,000</td><td>S$64</td></tr>
+<tr><td>Frame check 13</td><td><span class="pill i">Done</span></td><td>600 / 600</td><td>S$41</td></tr>
+<tr><td>Eval run 7</td><td><span class="pill w">Retrying</span></td><td>230 / 400</td><td>S$28</td></tr></tbody></table></div></div>
+</div>
+</section>
+
+</main>
+<script>
+var T=[["contrib","Contributor"],["oper","Operator"],["sec","Security"],["agent","Desktop agent"],["signup","Sign-up"],["wallet","Wallet"],["price","GPU pricing"],["buyer","Buyer portal"]];
+var nav=document.getElementById("tabs");
+function show(id){T.forEach(function(t,i){document.getElementById(t[0]).classList.toggle("on",t[0]===id);nav.children[i].setAttribute("aria-selected",t[0]===id)})}
+T.forEach(function(t){var b=document.createElement("button");b.textContent=t[1];b.setAttribute("role","tab");b.onclick=function(){show(t[0])};nav.appendChild(b)});
+function rnd(s){return function(){s=(s*9301+49297)%233280;return s/233280}}
+function strip(seed,pat){var r=rnd(seed),h="";for(var i=0;i<48;i++){var hr=i/2,c;
+if(pat==="a")c=hr<7?"d":hr<9?"u":hr<18?(r()<.5?"u":"d"):hr<23?"u":"d";
+else if(pat==="b")c=hr<6?"":hr<8?"d":hr<19?"u":hr<22?"u":"";
+else c=hr<8?"d":hr<12?"u":hr<17?"d":hr<22?"u":"d";
+if(r()<.06)c=c==="d"?"u":c;h+='<i class="'+c+'"></i>'}
+return '<div class="strip">'+h+'</div><div class="axis"><span>0:00</span><span>6:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>'}
+document.getElementById("devs").innerHTML=
+[["Laptop 1 (Windows, 8 cores)","Idle","i","a",11],["Laptop 2 (MacBook, 10 cores)","In use","w","b",23],["Desktop (Windows, GPU)","Idle","i","c",37]]
+.map(function(d){return'<tr><td>'+d[0]+'</td><td><span class="pill '+d[2]+'">'+d[1]+'</span></td><td>'+strip(d[4],d[3])+'</td></tr>'}).join("");
+var fc=[9,10,10,9,8,7,5,4,3,3,3,3,4,4,3,3,4,5,6,6,7,8,9,10],r2=rnd(5);
+document.getElementById("fc").innerHTML=fc.map(function(v){return'<i style="height:'+(v*10)+'%" title="'+Math.round(v*6)+' devices"></i>'}).join("");
+document.getElementById("mix").innerHTML=[["Windows, 4-6 cores",46],["Windows, 8+ cores",31],["macOS (Apple silicon)",41],["With dedicated GPU",24]]
+.map(function(m){return'<div style="margin-bottom:10px"><div class="row" style="margin-bottom:3px"><span>'+m[0]+'</span><span class="note" style="margin:0">'+m[1]+'</span></div><div style="height:8px;background:var(--sleep);border-radius:4px"><div style="height:8px;width:'+(m[1]*2)+'%;background:var(--idle);border-radius:4px"></div></div></div>'}).join("");
+var hm='<span></span>';for(var h=0;h<24;h++)hm+='<span>'+(h%6===0?h:"")+'</span>';
+["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].forEach(function(d,di){hm+='<span>'+d+'</span>';for(var h=0;h<24;h++){var v=fc[h]/10;if(di>4&&h>8&&h<20)v+=.25;v=Math.min(1,v*(0.85+r2()*.3));hm+='<i style="opacity:'+(0.12+v*.88).toFixed(2)+'"></i>'}});
+document.getElementById("hm").innerHTML=hm;
+function eco(){var p=+document.getElementById("pr").value/100*10;var ch=1204*30*0.6;var rev=ch*p/10;
+document.getElementById("prv").textContent="S$"+p.toFixed(2)+" per core-hour";
+document.getElementById("rev").textContent="S$"+Math.round(rev).toLocaleString();
+var pay=rev*.6/142;document.getElementById("pay").textContent="S$"+pay.toFixed(2)+" per device";
+var n=pay-1.4;var e=document.getElementById("net");e.textContent=(n<0?"-":"")+"S$"+Math.abs(n).toFixed(2);e.style.color=n<0?"var(--bad)":"var(--idle)"}
+eco();
+function chk(){var bad=["os","ram","mg","ad"].some(function(i){return document.getElementById(i).value==="no"});
+var r=document.getElementById("res");r.className="msg "+(bad?"no":"ok");
+r.textContent=bad?"This laptop can't join the pilot. Managed devices, unsupported systems, small memory and no admin rights all block the agent.":"Eligible. Continue to the consent form.";
+document.getElementById("go").disabled=bad;document.getElementById("go").style.opacity=bad?.4:1}
+
+var bal=32.4,paid=20;
+var TX=[["28 Sep","Job earnings: render batch 14","Pending","+2.90"],["27 Sep","Uptime bonus (20 nights)","Available","+10.00"],["24 Sep","Job earnings: frame check 13","Available","+4.10"],["20 Sep","Referral: 1 friend enrolled","Available","+5.00"],["15 Sep","Pilot completion payment","Paid","+20.00"],["14 Sep","Withdrawal to PayNow","Paid","-20.00"],["10 Sep","Adjustment: failed verification","Reversed","-1.20"]];
+function txr(){document.getElementById("tx").innerHTML=TX.map(function(t){var c=t[2]==="Paid"||t[2]==="Available"?"i":t[2]==="Pending"?"w":"b";return'<tr><td>'+t[0]+'</td><td>'+t[1]+'</td><td><span class="pill '+c+'">'+t[2]+'</span></td><td>S$'+t[3].replace(/^([+-])/,"$1 ")+'</td></tr>'}).join("")}
+txr();
+document.getElementById("wdev").innerHTML=[["Desktop (GPU)",58],["Laptop 1",27],["Laptop 2",15]].map(function(m){return'<div style="margin-bottom:10px"><div class="row" style="margin-bottom:3px"><span>'+m[0]+'</span><span class="note" style="margin:0">'+m[1]+'%</span></div><div style="height:8px;background:var(--sleep);border-radius:4px"><div style="height:8px;width:'+m[1]+'%;background:var(--idle);border-radius:4px"></div></div></div>'}).join("");
+function wd(){var a=parseFloat(document.getElementById("wx").value),r=document.getElementById("wr");
+if(isNaN(a)||a<10){r.textContent="Enter at least S$10.";return}
+if(a>bal){r.textContent="You can withdraw up to S$"+bal.toFixed(2)+".";return}
+bal-=a;paid+=a;document.getElementById("wa").textContent="S$"+bal.toFixed(2);document.getElementById("wp").textContent="S$"+paid.toFixed(2);
+TX.unshift(["Today","Withdrawal to PayNow","Processing","-"+a.toFixed(2)]);txr();r.textContent="Withdrawal requested. Expect it in 1 to 3 working days."}
+function pgset(){var v=document.getElementById("pg").value.split("|");document.getElementById("ppr").value=v[0];document.getElementById("pw").value=v[1];pcalc()}
+function pcalc(){var g=function(i){return parseFloat(document.getElementById(i).value)||0};
+var h=g("ph"),u=g("pu"),f=g("pf");document.getElementById("phv").textContent=h;document.getElementById("puv").textContent=u;document.getElementById("pfv").textContent=f;
+var hrs=h*30*u/100,gross=hrs*g("ppr"),fee=gross*f/100,el=hrs*g("pw")/1000*g("pe"),net=gross-fee-el;
+var $=function(x){return(x<0?"-":"")+"US$"+Math.abs(x).toFixed(2)};
+document.getElementById("r1").textContent=hrs.toFixed(0)+" h";document.getElementById("r2").textContent=$(gross);document.getElementById("r3").textContent="-"+$(fee).replace("-","");document.getElementById("r4").textContent="-"+$(el).replace("-","");
+var n=document.getElementById("r5");n.textContent=$(net);n.style.color=net<0?"var(--bad)":"var(--idle)";
+var m=document.getElementById("rm");m.className="msg "+(net<0?"no":net<5?"":"ok");m.style.border=net>=0&&net<5?"1px solid var(--amber)":"";m.style.color=net>=0&&net<5?"var(--amber)":"";
+m.textContent=net<0?"Loses money at these settings. Electricity costs more than the device earns.":net<5?"Net earnings are very small. Few contributors will keep this running.":"Positive net earnings at these settings."}
+pcalc();
+var SF=[{id:"D-017",d:"Laptop D-017",c:"Agent tampering",v:"High",r:"Agent file hash does not match the signed build",t:"28 Sep",s:"Open"},
+{id:"D-052",d:"Laptop D-052",c:"Fake or spoofed data",v:"High",r:"Virtual machine detected, benchmark identical to 6 other devices",t:"27 Sep",s:"Open"},
+{id:"D-088",d:"Laptop D-088",c:"Suspicious behavior",v:"Critical",r:"Agent contacted an unknown server",t:"29 Sep",s:"Open"},
+{id:"D-031",d:"Laptop D-031",c:"Outdated system",v:"Medium",r:"No security update for 112 days",t:"20 Sep",s:"Open"},
+{id:"D-004",d:"Laptop D-004",c:"Protection off",v:"Medium",r:"Firewall is off",t:"26 Sep",s:"Open"},
+{id:"D-063",d:"Laptop D-063",c:"Untrusted network",v:"Low",r:"Public Wi-Fi during idle hours",t:"25 Sep",s:"Open"}];
+var SL=[["Today 09:12","System","Raised critical flag","D-088"],["Yesterday 18:40","System","Raised high flag","D-017"]];
+function sv(v){return v==="Critical"||v==="High"?"b":v==="Medium"?"w":""}
+function srender(){var f=document.getElementById("sf").value;
+document.getElementById("st").innerHTML=SF.filter(function(x){return!f||x.v===f}).map(function(x){var done=x.s!=="Open";
+return'<tr><td>'+x.d+'</td><td>'+x.c+'</td><td><span class="pill '+sv(x.v)+'">'+x.v+'</span></td><td style="white-space:normal;min-width:200px">'+x.r+'</td><td>'+x.t+'</td><td>'+x.s+'</td><td>'+(done?'':'<button class="btn o" onclick="sact(\''+x.id+'\',\'Paused\')">Pause</button> <button class="btn o" onclick="sact(\''+x.id+'\',\'Dismissed\')">Dismiss</button>')+'</td></tr>'}).join("");
+var op=SF.filter(function(x){return x.s==="Open"}),n=function(v){return op.filter(function(x){return x.v===v}).length};
+document.getElementById("sk").innerHTML=[["Critical",n("Critical")],["High",n("High")],["Medium",n("Medium")],["Low",n("Low")]].map(function(k){return'<div class="card kpi"><b>'+k[1]+'</b><span>Open '+k[0].toLowerCase()+' flags</span></div>'}).join("");
+var cats={};SF.forEach(function(x){cats[x.c]=(cats[x.c]||0)+1});
+document.getElementById("sc").innerHTML=Object.keys(cats).map(function(k){return'<div style="margin-bottom:8px"><div class="row" style="margin-bottom:3px"><span>'+k+'</span><span class="note" style="margin:0">'+cats[k]+'</span></div><div style="height:8px;background:var(--sleep);border-radius:4px"><div style="height:8px;width:'+(cats[k]*25)+'%;background:var(--idle);border-radius:4px"></div></div></div>'}).join("");
+document.getElementById("sl").innerHTML=SL.map(function(l){return'<tr><td>'+l[0]+'</td><td>'+l[1]+'</td><td>'+l[2]+'</td><td>'+l[3]+'</td></tr>'}).join("")}
+function slogadd(a,b,c){SL.unshift(["Just now",a,b,c]);srender()}
+function sact(id,st){SF.forEach(function(x){if(x.id===id){x.s=st;SL.unshift(["Just now","Operator",st==="Paused"?"Paused device":"Dismissed flag",id])}});srender()}
+srender();
+chk();
+show("contrib");
+</script>
+</body>
+</html>
