@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+/* Color system ported from idle-compute-mockups.html so the real app matches the approved mockup. */
+:root {
+  --bg: #edf2f3;
+  --surf: #fff;
+  --ink: #14303a;
+  --mut: #5b7480;
+  --line: #d5dfe3;
+  --idle: #1f8a7d;
+  --use: #b9c7ce;
+  --sleep: #e3eaed;
+  --amber: #c98a0b;
+  --bad: #b4442f;
+  --on: #fff;
+  --background: var(--bg);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1d23;
+    --surf: #152a32;
+    --ink: #e4eef0;
+    --mut: #8fa8b2;
+    --line: #25404a;
+    --idle: #3cbfae;
+    --use: #4a6672;
+    --sleep: #1e343c;
+    --amber: #e0a93a;
+    --bad: #e27b67;
+    --on: #0e1d23;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Schibsted Grotesk", Arial, Helvetica, sans-serif;
+}
+
+.card {
+  background: var(--surf);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.pill {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 99px;
+  font-size: 12px;
+  border: 1px solid var(--line);
+}
+.pill.i {
+  color: var(--idle);
+  border-color: var(--idle);
+}
+.pill.w {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+.pill.b {
+  color: var(--bad);
+  border-color: var(--bad);
+}
+
+.strip {
+  display: flex;
+  height: 16px;
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 240px;
+  gap: 1px;
+}
+.strip i {
+  flex: 1;
+  background: var(--sleep);
+}
+.strip i.u {
+  background: var(--use);
+}
+.strip i.d {
+  background: var(--idle);
+}

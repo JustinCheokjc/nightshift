@@ -7,6 +7,18 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJsZzEiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMxNEEzOTQiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwQTVFNTUiLz48L2xpbmVhckdyYWRpZW50PjxtYXNrIGlkPSJsbTEiPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjMxIiBjeT0iMTkiIHI9IjEwIiBmaWxsPSIjMDAwIi8+PC9tYXNrPjwvZGVmcz48cmVjdCB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHJ4PSIxMiIgZmlsbD0idXJsKCNsZzEpIi8+PGNpcmNsZSBjeD0iMjIiIGN5PSIyNiIgcj0iMTIiIGZpbGw9IiNmZmYiIG1hc2s9InVybCgjbG0xKSIvPjxjaXJjbGUgY3g9IjM0LjUiIGN5PSIxMy41IiByPSIyLjQiIGZpbGw9IiNCRkYzRUEiLz48L3N2Zz4=">
 <meta name="description" content="A student-led pilot measuring how much idle compute laptops can offer. Join the pilot or request compute.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Nightshift: idle compute pilot">
+<meta property="og:description" content="A student-led pilot measuring how much idle compute laptops can offer. Join the pilot or request compute.">
+<meta property="og:image" content="logo-mark.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Nightshift: idle compute pilot">
+<meta name="twitter:description" content="A student-led pilot measuring how much idle compute laptops can offer. Join the pilot or request compute.">
+<meta name="twitter:image" content="logo-mark.png">
+<script>
+!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.uid.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+posthog.init('phc_Au4LddtDANBRGZp2wpqvXEwXpYkcJdgNCWAnb9gfs4y9',{api_host:'https://us.i.posthog.com',person_profiles:'identified_only',autocapture:false,capture_pageview:false});
+</script>
 <style>
 :root{--bg:#FBFBFD;--surf:#fff;--ink:#1D1D1F;--mut:#6E6E73;--line:#D8D8DD;--acc:#0A7A6F;--story:#0B1A20;--si:#F2F7F8;--sm:#8FA9B2;--dim:rgba(255,255,255,.14);
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -178,6 +190,69 @@ h1,h2{font-weight:650}
 .ld{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--sm);font-size:14px;pointer-events:none}
 .lp{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px}.lp button{font:inherit;font-size:12.5px;color:var(--si);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 10px;cursor:pointer}.lp .s0{border-color:#46D1BF}.lp .s2{border-color:#FF6B5A;color:#FFB3A8}
 .dk button:focus-visible{outline-color:#46D1BF}
+
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+h1,h2{letter-spacing:-.04em;font-weight:600}
+h1{font-size:clamp(56px,9vw,120px);line-height:1.04}
+h2{font-size:clamp(40px,6vw,76px);line-height:1.08}
+.t2{font-size:clamp(42px,6.4vw,74px);letter-spacing:-.04em}
+.lead{font-size:clamp(19px,2.2vw,24px);font-weight:400;line-height:1.5;max-width:640px}
+.pg .sub{font-size:clamp(19px,2.2vw,23px);max-width:640px}
+.eyebrow,.ey{font-size:12px;font-weight:600;letter-spacing:.16em;opacity:.85}
+section.p{padding:clamp(96px,14vw,180px) 0}
+.pg{padding:clamp(80px,12vw,160px) 0 110px}
+.bar{height:44px}
+nav a{font-size:12.5px}
+nav a[aria-current=page]{background:none;font-weight:600;opacity:1}
+.card{border:0;background:color-mix(in srgb,var(--ink) 3%,var(--surf));box-shadow:none}
+.card:hover,.tile:hover{border-color:transparent;box-shadow:none;background:color-mix(in srgb,var(--ink) 5%,var(--surf))}
+.tile{border:0;background:color-mix(in srgb,var(--ink) 3%,var(--surf))}
+.kpis{background:none;border:0;gap:28px 48px;grid-template-columns:repeat(auto-fit,minmax(140px,auto));justify-content:center;justify-items:center}
+.kpis div{background:none;padding:0;text-align:center}
+.kpis b{font-size:clamp(30px,4.5vw,44px);letter-spacing:-.03em}
+
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:clamp(64px,10vw,120px) 22px clamp(40px,8vw,90px);min-height:auto}
+.hero>*{grid-column:unset}
+.hero .lead{margin:22px auto 0}
+.hero .ctas{justify-content:center;margin-top:36px}
+.hero .hv{grid-column:unset;grid-row:unset;margin:clamp(56px,9vw,96px) 0 0;max-width:1180px;width:100%}
+.hv .hs{border-radius:28px;border:0;box-shadow:0 40px 100px -20px rgba(10,30,40,.35)}
+@media (max-width:860px){.hero{padding-top:56px}}
+
+.steps-pin-section{background:var(--story);color:var(--si);padding:clamp(80px,12vw,140px) 0 0}
+.steps-pin-section .wrap{text-align:center}
+.steps-pin-section .ey{color:#46D1BF}
+.steps-pin-section .lead{color:var(--sm);margin-left:auto;margin-right:auto}
+.steps-pin-track{height:280vh;position:relative}
+.steps-pin-stage{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+.step-panel{position:absolute;display:flex;flex-direction:column;align-items:center;text-align:center;opacity:0;transform:scale(.92) translateY(24px);transition:opacity .5s ease,transform .5s ease;pointer-events:none}
+.step-panel.on{opacity:1;transform:none;pointer-events:auto}
+.step-panel .ci{width:min(28vw,120px);height:min(28vw,120px);border-radius:50%;background:color-mix(in srgb,#46D1BF 16%,transparent);color:#46D1BF;display:flex;align-items:center;justify-content:center;margin-bottom:28px}
+.step-panel .ci .ic{width:44%;height:44%}
+.step-panel b{font-size:clamp(32px,6vw,56px);font-weight:600;letter-spacing:-.03em;display:block}
+.step-panel .s{font-size:clamp(17px,2vw,21px);color:var(--sm);margin-top:10px;display:block}
+.step-panel .bdg{margin-top:18px;border-color:#46D1BF;color:#46D1BF}
+.step-panel .bdg.pl{border-color:#E0A93A;color:#E0A93A}
+.steps-pin-dots{position:absolute;bottom:clamp(32px,6vh,64px);display:flex;gap:10px}
+.steps-pin-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.22);transition:background .3s}
+.steps-pin-dots i.on{background:#46D1BF}
+@media (prefers-reduced-motion:reduce){.step-panel{transition:none}}
+
+.stage3{max-width:none;height:min(82vh,640px);border-radius:0;border:0;margin:44px -22px 18px}
+@media (min-width:1040px){.stage3{margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw)}}
+
+.hero-loop{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none}
+.hero>*:not(.hero-loop){position:relative;z-index:1}
+.hero-loop i{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;will-change:transform}
+.hero-loop i:nth-child(1){width:46vw;height:46vw;max-width:620px;max-height:620px;left:-12%;top:-14%;background:radial-gradient(circle,var(--acc),transparent 70%);animation:heroDriftA 26s ease-in-out infinite}
+.hero-loop i:nth-child(2){width:38vw;height:38vw;max-width:520px;max-height:520px;right:-10%;top:6%;background:radial-gradient(circle,#3B82F6,transparent 70%);animation:heroDriftB 32s ease-in-out infinite}
+.hero-loop i:nth-child(3){width:32vw;height:32vw;max-width:440px;max-height:440px;left:28%;bottom:-20%;background:radial-gradient(circle,#46D1BF,transparent 70%);animation:heroDriftC 22s ease-in-out infinite}
+@keyframes heroDriftA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(6vw,4vh) scale(1.08)}}
+@keyframes heroDriftB{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-5vw,6vh) scale(.95)}}
+@keyframes heroDriftC{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(4vw,-5vh) scale(1.1)}}
+@media (prefers-reduced-motion:reduce){.hero-loop i{animation:none!important}}
+@media (prefers-color-scheme:dark){.hero-loop i{opacity:.35}}
+:root[data-theme="dark"] .hero-loop i{opacity:.35}
 </style>
 </head>
 <body>
@@ -187,7 +262,7 @@ h1,h2{font-weight:650}
 <header class="top"><div class="wrap"><div class="bar"><a class="logo" href="#home" data-go="home"><svg width="30" height="30" viewBox="0 0 48 48" aria-hidden="true" style="margin-right:10px"><use href="#logo-mark"/></svg><span class="bn">Nightshift</span></a><nav id="nv" aria-label="Main"></nav><div class="rt"><button id="th" aria-label="Toggle light and dark mode">&#9680;</button><button id="mb2" aria-label="Open menu" aria-expanded="false" aria-controls="nv"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div></div></div></header>
 
 <main id="main"><div class="view" id="home">
-<div class="wrap hero"><div class="eyebrow rv">Idle compute pilot</div>
+<div class="wrap hero"><div class="hero-loop" aria-hidden="true"><i></i><i></i><i></i></div><div class="eyebrow rv">Idle compute pilot</div>
 <h1 class="rv" id="h1">Idle hours.<br><span class="g">Put to work.</span></h1>
 <p class="lead rv">Your laptop sits idle for hours. We measure it, then match it to teams that need compute.</p>
 <div class="ctas rv"><a class="btn" href="#join" data-go="join">Join the pilot</a><a href="#story" data-scroll="story">See a day in 30 seconds &darr;</a></div>
@@ -202,7 +277,14 @@ h1,h2{font-weight:650}
 <path d="M410 170C440 150 470 165 498 185" fill="none" stroke="#46D1BF" stroke-opacity=".4" stroke-dasharray="4 5"/>
 <circle r="5" fill="#46D1BF"><animateMotion dur="2.6s" repeatCount="indefinite" path="M410 170C440 150 470 165 498 185"/></circle><circle r="5" fill="#E0A93A"><animateMotion dur="2.6s" begin="1.3s" repeatCount="indefinite" path="M410 170C440 150 470 165 498 185"/></circle></svg></div></div>
 
-<section class="p" style="padding:56px 0"><div class="wrap"><div class="ey rv">How it works</div><h2 class="rv">Four steps, built in order.</h2><p class="lead rv" style="margin-bottom:36px">The first two are live in the pilot. The last two are planned.</p><div class="steps rv"><div class="st"><div class="ci"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-down"/></svg></div><b>Install</b><span class="s">A small app</span><br><span class="bdg">Pilot now</span></div><div class="st"><div class="ci"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"/></svg></div><b>Rest</b><span class="s">Plugged in, overnight</span><br><span class="bdg">Pilot now</span></div><div class="st"><div class="ci"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-cube"/></svg></div><b>Run</b><span class="s">Safe, checked jobs</span><br><span class="bdg pl">Planned</span></div><div class="st"><div class="ci"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-wallet"/></svg></div><b>Earn</b><span class="s">Paid to your wallet</span><br><span class="bdg pl">Planned</span></div></div></div></section>
+<section class="steps-pin-section"><div class="wrap"><div class="ey rv">How it works</div><h2 class="rv">Four steps, built in order.</h2><p class="lead rv">The first two are live in the pilot. The last two are planned.</p></div>
+<div class="steps-pin-track"><div class="steps-pin-stage">
+<div class="step-panel on" data-step="0"><div class="ci"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-down"/></svg></div><b>Install</b><span class="s">A small app</span><span class="bdg">Pilot now</span></div>
+<div class="step-panel" data-step="1"><div class="ci"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"/></svg></div><b>Rest</b><span class="s">Plugged in, overnight</span><span class="bdg">Pilot now</span></div>
+<div class="step-panel" data-step="2"><div class="ci"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-cube"/></svg></div><b>Run</b><span class="s">Safe, checked jobs</span><span class="bdg pl">Planned</span></div>
+<div class="step-panel" data-step="3"><div class="ci"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-wallet"/></svg></div><b>Earn</b><span class="s">Paid to your wallet</span><span class="bdg pl">Planned</span></div>
+<div class="steps-pin-dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
+</div></div></section>
 
 <section style="padding:0 0 8px"><div class="wrap"><div class="kpis rv"><div><b>50 to 200</b><span>Pilot laptops (target)</span></div><div><b>30 days</b><span>Pilot length</span></div><div><b>Device state only</b><span>No file access</span></div><div><b>S$20</b><span>Pilot payment</span></div></div></div></section>
 <div class="story" id="story"><div class="stick">
@@ -266,13 +348,13 @@ h1,h2{font-weight:650}
 <p style="margin-top:26px"><a class="btn" href="#join" data-go="join">Join the pilot</a></p></div></div>
 
 <div class="view" id="about"><div class="wrap pg"><h1 class="rv t2">About</h1><p class="sub rv">A student-led pilot, run in the open.</p>
-<div class="grid"><div class="card rv"><h3>Who is behind this</h3><p style="color:var(--mut)">Built by Justin, a student founder in Singapore. [Add photo, short bio and LinkedIn link.]</p><p style="margin-top:10px"><a href="mailto:hello@example.com">hello@example.com</a></p></div>
+<div class="grid"><div class="card rv"><h3>Who is behind this</h3><p style="color:var(--mut)">Justin is the founder of Nightshift, an early-stage pilot measuring the usable idle computing capacity of everyday laptops. Based in Singapore, he is studying at SMU. His focus in this first phase is transparency: collecting only device state, publishing what is and isn't collected, and learning from a small group of volunteers.</p><p style="margin-top:10px"><a href="https://www.linkedin.com/in/justin-cheok-430907188/">LinkedIn</a> &middot; <a href="mailto:justincheok@hotmail.com">justincheok@hotmail.com</a></p></div>
 <div class="card rv"><h3>Why we are doing this</h3><p style="color:var(--mut)">Laptops spend many hours idle. We want to measure how much of that is really usable before building anything else, and be open with every participant about what we collect.</p></div></div>
 <h2 class="rv" style="font-size:clamp(26px,4vw,40px);margin:48px 0 14px">Frequently asked questions</h2><div><details name="faq"><summary>Will it slow my laptop?</summary><p>The app is designed to use under 1% of your CPU, and runs no jobs during the pilot.</p></details><details name="faq"><summary>Can I earn money?</summary><p>The pilot pays a flat amount for 30 days. Earnings from real jobs come in a later phase, and figures before then are estimates.</p></details><details name="faq"><summary>Which laptops can join?</summary><p>Personal Windows or Mac laptops with admin rights and at least 8 GB memory. Managed, shared, virtual and tablet devices are not eligible.</p></details><details name="faq"><summary>Who can see my data?</summary><p>Only the project team, under a consent form you can review. You can export or delete your data any time.</p></details><details name="faq"><summary>Will it use more electricity?</summary><p>A little, while the laptop stays awake. The dashboard estimates the cost.</p></details><details name="faq"><summary>What about battery wear and heat?</summary><p>The app is being designed to work only while plugged in, and to pause when the laptop is busy or hot. The pilot runs no compute jobs, so it adds almost no load.</p></details><details name="faq"><summary>How do payouts work?</summary><p>The pilot payment is sent after 30 days by PayNow or bank transfer. Later, job earnings would sit in a wallet and be paid out through a licensed payment provider, with a minimum withdrawal.</p></details><details name="faq"><summary>How do I stop?</summary><p>Pause or uninstall the app any time, and ask us to delete your data. Nothing is left running.</p></details><details name="faq"><summary>Who are the buyers?</summary><p>Teams with batch work that has no sensitive data, such as rendering, data processing and research simulations. We are still finding our first design partners.</p></details></div>
 <h2 class="rv" style="font-size:clamp(26px,4vw,40px);margin:48px 0 6px">Privacy notice and consent</h2><p class="fine" style="margin:0 0 14px">Draft wording. Have it reviewed by a qualified adviser before recruiting participants. Not legal advice.</p>
 <details name="lg"><summary>What we collect and why</summary><p>Whether your laptop is on, plugged in and idle, CPU, GPU and memory load, hardware specs, network type and simple security checks. We use it only to measure idle capacity during the pilot.</p></details>
 <details name="lg"><summary>What we never collect</summary><p>Your files, browsing history, keystrokes, screen contents or location.</p></details>
-<details name="lg"><summary>How long we keep it and where</summary><p>Kept for the pilot and [X] months after, then deleted or anonymised. Stored in [region] by [provider].</p></details>
+<details name="lg"><summary>How long we keep it and where</summary><p>Kept for the pilot and 12 months after, then deleted or anonymised. Stored in Singapore by Supabase.</p></details>
 <details name="lg"><summary>Your rights</summary><p>You can withdraw consent, request access to your data, ask for corrections or deletion, and uninstall at any time by contacting us.</p></details>
 <details name="lg"><summary>Who can take part</summary><p>People aged 18 or over, on a personal laptop they own, with admin rights.</p></details>
 <p style="margin-top:26px"><a class="btn" href="#join" data-go="join">Join the pilot</a></p></div></div>
@@ -282,23 +364,51 @@ h1,h2{font-weight:650}
 <label class="f" for="e">Email</label><input class="f" id="e" type="email" required placeholder="you@example.com">
 <label class="f" for="t">I am joining as</label><select class="f" id="t"><option>A contributor with a laptop</option><option>A buyer with a workload</option></select>
 <label class="f" for="o">Operating system</label><select class="f" id="o"><option>Windows 10 or 11</option><option>macOS 12 or newer</option><option>Other</option></select>
-<label class="ck"><input type="checkbox" required><span>I am 18 or over and have read the <a href="#about" data-go="about">privacy notice</a>.</span></label><button class="btn" type="submit">Request access</button></form><div class="card" id="done" style="display:none;max-width:520px" role="status"><h3 id="dh">You are on the list</h3><ul class="t"><li>We check your laptop against the eligibility list</li><li>You receive the consent form by email</li><li>You install the app and start the 30-day pilot</li></ul><p><a class="btn" id="mb" href="mailto:hello@example.com">Send details by email</a></p><p class="fine">Until a sign-up tool is connected, sending by email is how your request reaches us.</p></div></div></div>
+<label class="ck"><input type="checkbox" required><span>I am 18 or over and have read the <a href="#about" data-go="about">privacy notice</a>.</span></label><p id="jerr" class="fine" style="display:none;color:#B4442F">Something went wrong saving your request. Try again, or email us directly.</p><button class="btn" type="submit">Request access</button></form><div class="card" id="done" style="display:none;max-width:520px" role="status"><h3 id="dh">You are on the list</h3><ul class="t"><li>We check your laptop against the eligibility list</li><li>You receive the consent form by email</li><li>You install the app and start the 30-day pilot</li></ul><p><a class="btn o" id="mb" href="mailto:justincheok@hotmail.com">Email us instead</a></p><p class="fine">We've recorded your request. Email us if you'd rather follow up directly.</p></div></div></div>
 
 </main><footer class="ft"><div class="wrap"><div class="fg"><div><span class="logo" style="margin-bottom:6px"><svg width="26" height="26" viewBox="0 0 48 48" aria-hidden="true" style="margin-right:9px"><use href="#logo-mark"/></svg><b class="bn">Nightshift</b></span><p>An early-stage pilot measuring idle laptop compute. No earnings are guaranteed.</p></div>
 <div><h4>Pilot</h4><a href="#contributors" data-go="contributors">Contributors</a><a href="#buyers" data-go="buyers">Buyers</a><a href="#trust" data-go="trust">Trust and safety</a></div>
-<div><h4>Company</h4><a href="#about" data-go="about">About, FAQ and privacy</a><a href="#join" data-go="join">Join the pilot</a><a href="mailto:hello@example.com">Contact</a></div></div>
+<div><h4>Company</h4><a href="#about" data-go="about">About, FAQ and privacy</a><a href="#join" data-go="join">Join the pilot</a><a href="mailto:justincheok@hotmail.com">Contact</a></div></div>
 </div></footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script>
-var BRAND="Nightshift",CONTACT="hello@example.com",FORM_URL="";
-var EV=[];function track(n,d){var e={n:n,d:d||{},t:Date.now()};EV.push(e);window.dataLayer=window.dataLayer||[];window.dataLayer.push(e);if(window.NS_TRACK)try{window.NS_TRACK(e)}catch(x){}}
+var BRAND="Nightshift",CONTACT="justincheok@hotmail.com",FORM_URL="";
+var SUPABASE_URL="https://ifnlcchbjmynxwjseyqz.supabase.co",SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmbmxjY2hiam15bnh3anNleXF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4MzkyNzUsImV4cCI6MjEwNjQxNTI3NX0.DC5T4VEoodqSDp9I_Q2vgtW6gMUnue37JYvCiBfr1Dg";
+var EV=[];function track(n,d){var e={n:n,d:d||{},t:Date.now()};EV.push(e);window.dataLayer=window.dataLayer||[];window.dataLayer.push(e);if(window.posthog)try{window.posthog.capture(n,d||{})}catch(x){}if(window.NS_TRACK)try{window.NS_TRACK(e)}catch(x){}}
 var V=[["home","Home"],["contributors","Contributors"],["buyers","Buyers"],["trust","Trust"],["about","About"],["join","Join"]];
 var nv=document.getElementById("nv"),$=function(i){return document.getElementById(i)},mb=$("mb2");
 mb.onclick=function(){var o=nv.classList.toggle("open");mb.setAttribute("aria-expanded",o)};
 document.addEventListener("keydown",function(e){if(e.key==="Escape"){nv.classList.remove("open");mb.setAttribute("aria-expanded","false")}});
 V.forEach(function(v){var a=document.createElement("a");a.href="#"+v[0];a.textContent=v[1];a.dataset.go=v[0];if(v[0]==="join")a.className="j";nv.appendChild(a)});
-var io=null;if("IntersectionObserver"in window){io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.12})}else document.documentElement.classList.add("nojs");
-function watch(){document.querySelectorAll(".view.on .rv:not(.in)").forEach(function(el){io?io.observe(el):el.classList.add("in")})}
+var reduceMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
+var hasGSAP=!!(window.gsap&&window.ScrollTrigger);
+if(hasGSAP)gsap.registerPlugin(ScrollTrigger);
+if(!hasGSAP)document.documentElement.classList.add("nojs");
+function heroIntro(){var els=document.querySelectorAll(".hero .rv:not(.in)");if(!els.length)return;
+els.forEach(function(el){el.classList.add("in")});
+if(reduceMotion||!hasGSAP)return;
+gsap.fromTo(els,{opacity:0,y:24},{opacity:1,y:0,duration:.8,ease:"power3.out",stagger:.1,delay:.1})}
+function watch(){heroIntro();if(hasGSAP)ScrollTrigger.refresh();
+document.querySelectorAll(".view.on .rv:not(.in)").forEach(function(el){
+if(el.closest(".hero"))return;
+if(reduceMotion||!hasGSAP){el.classList.add("in");return}
+var kids=el.querySelectorAll(":scope > .card, :scope > .tile, :scope > .st, :scope > div > .card");
+var targets=kids.length>1?kids:el;
+gsap.fromTo(targets,{opacity:0,y:28},{opacity:1,y:0,duration:.7,ease:"power3.out",stagger:kids.length>1?.08:0,
+scrollTrigger:{trigger:el,start:"top 88%",once:true,onEnter:function(){el.classList.add("in")}}})})}
+if(hasGSAP&&!reduceMotion){
+document.addEventListener("mouseenter",function(e){var b=e.target.closest&&e.target.closest(".btn");if(b)gsap.to(b,{y:-2,boxShadow:"0 8px 20px rgba(10,30,40,.18)",duration:.2,ease:"power2.out"})},true);
+document.addEventListener("mouseleave",function(e){var b=e.target.closest&&e.target.closest(".btn");if(b)gsap.to(b,{y:0,boxShadow:"0 1px 2px rgba(0,0,0,.14)",duration:.2,ease:"power2.out"})},true)}
+var stepsPinInit=false;
+function initStepsPin(){if(stepsPinInit)return;var track=document.querySelector(".steps-pin-track");if(!track)return;stepsPinInit=true;
+var panels=document.querySelectorAll(".step-panel"),dots=document.querySelectorAll(".steps-pin-dots i");
+if(reduceMotion||!hasGSAP)return;
+ScrollTrigger.create({trigger:track,start:"top top",end:"bottom bottom",scrub:true,
+onUpdate:function(self){var idx=Math.min(panels.length-1,Math.floor(self.progress*panels.length));
+panels.forEach(function(p,i){p.classList.toggle("on",i===idx)});
+dots.forEach(function(d,i){d.classList.toggle("on",i===idx)})}})}
 function show(id){if(id==="faq")id="about";if(id==="pricing")id="buyers";if(V.every(function(v){return v[0]!==id}))id="home";var vt=V.filter(function(v){return v[0]===id})[0];document.title=id==="home"?BRAND+": idle compute pilot":vt[1]+" | "+BRAND;nv.classList.remove("open");mb.setAttribute("aria-expanded","false");
 V.forEach(function(v){$(v[0]).classList.toggle("on",v[0]===id)});
 Array.prototype.forEach.call(nv.children,function(a){a.dataset.go===id?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current")});
@@ -327,16 +437,22 @@ var ed=0,ecs=document.querySelectorAll("#elg input");function ev(){var n=0,miss=
 $("eb").style.width=n/ecs.length*100+"%";$("en").textContent=n+" of "+ecs.length;var r=$("er");
 if(n===ecs.length){if(!ed){ed=1;track("eligibility_complete")}r.textContent="You look eligible. Join the pilot to get the consent form.";r.style.color="var(--acc)";$("ej").style.display="inline-block"}else{r.textContent="Still needed: "+miss;r.style.color="var(--mut)";$("ej").style.display="none"}}
 ecs.forEach(function(c){c.onchange=ev});ev();
-$("jf").onsubmit=function(e){e.preventDefault();var em=$("e").value,ty=$("t").value,os=$("o").value;track("form_submit",{type:ty});
+$("jf").onsubmit=function(e){e.preventDefault();var em=$("e").value,ty=$("t").value,os=$("o").value,isBuyer=ty.indexOf("buyer")>-1;track("form_submit",{type:ty});
 var body="Email: "+em+"\nJoining as: "+ty+"\nOS: "+os;$("mb").href="mailto:"+CONTACT+"?subject="+encodeURIComponent(BRAND+" pilot request")+"&body="+encodeURIComponent(body);
-if(FORM_URL){try{fetch(FORM_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:em,type:ty,os:os})})}catch(x){}}$("dh").textContent=$("t").value.indexOf("buyer")>-1?"We will be in touch about your workload":"You are on the list";$("jf").style.display="none";$("done").style.display="block"};
+var submitBtn=$("jf").querySelector('button[type="submit"]');submitBtn.disabled=true;$("jerr").style.display="none";
+fetch(SUPABASE_URL+"/rest/v1/signups",{method:"POST",headers:{"Content-Type":"application/json",apikey:SUPABASE_ANON_KEY,Authorization:"Bearer "+SUPABASE_ANON_KEY,Prefer:"return=minimal"},
+body:JSON.stringify({email:em,role:isBuyer?"buyer":"contributor",os:os,consent_version:"v1"})})
+.then(function(r){if(!r.ok)throw new Error("signup failed");
+if(FORM_URL){try{fetch(FORM_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:em,type:ty,os:os})})}catch(x){}}
+$("dh").textContent=isBuyer?"We will be in touch about your workload":"You are on the list";$("jf").style.display="none";$("done").style.display="block"})
+.catch(function(){submitBtn.disabled=false;$("jerr").style.display="block"})};
 document.querySelectorAll(".bn").forEach(function(n){n.textContent=BRAND});
 var manual=matchMedia("(prefers-reduced-motion: reduce)").matches;if(manual)document.documentElement.classList.add("man");$("sc").oninput=tick;
 if(/[?&]h=b/.test(location.search))$("h1").innerHTML="Your laptop sleeps.<br><span class='g'>Your hours do not have to.</span>";
 var mn="";for(var i=0;i<24;i++)mn+='<i class="'+seq(8+i)+'"></i>';$("mn").innerHTML=mn;
 var pt=document.querySelectorAll("#ps button"),sc=document.querySelectorAll(".scr");pt.forEach(function(b,i){b.onclick=function(){pt.forEach(function(x,j){x.setAttribute("aria-selected",j===i);sc[j].classList.toggle("on",j===i)});track("screen_view",{s:i})}});
 if(matchMedia("(prefers-reduced-motion: reduce)").matches)document.querySelectorAll("animateMotion").forEach(function(a){a.remove()});
-calc();show(location.hash.slice(1));
+calc();show(location.hash.slice(1));initStepsPin();
 </script>
 <script>(function(){
 var $=function(i){return document.getElementById(i)};var c0=$("c3");if(!c0)return;
