@@ -12,8 +12,8 @@ create table public.signups (
 
 alter table public.signups enable row level security;
 
-create policy "signups_insert_public" on public.signups
+create policy signups_insert_public on public.signups
   for insert with check (true);
 
-create policy "signups_select_admin" on public.signups
+create policy signups_select_admin on public.signups
   for select using (public.is_admin());

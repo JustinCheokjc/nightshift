@@ -1,7 +1,11 @@
 import { getProfile } from "@/lib/dal";
 import { signOut } from "@/app/actions/auth";
+import { getContributorActivity } from "@/lib/activity";
 import NavTabs from "@/components/NavTabs";
 import PageTransition from "@/components/PageTransition";
+import CommandPalette from "@/components/CommandPalette";
+import ActivityBell from "@/components/ActivityBell";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default async function DashboardLayout({
   children,
@@ -9,12 +13,20 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const profile = await getProfile();
+  const isAdmin = profile?.role === "admin";
+  const activity = await getContributorActivity(profile!.id);
 
   const tabs = [
     { href: "/dashboard", label: "Devices" },
     { href: "/dashboard/wallet", label: "Wallet" },
     { href: "/dashboard/security", label: "Security" },
-    ...(profile?.role === "admin" ? [{ href: "/admin", label: "Operator" }] : []),
+    { href: "/dashboard/settings", label: "Settings" },
+    ...(isAdmin ? [{ href: "/admin", label: "Operator" }] : []),
+  ];
+
+  const commandItems = [
+    ...tabs.map((t) => ({ label: t.label, href: t.href })),
+    { label: "Sign out", onSelect: signOut },
   ];
 
   return (
@@ -27,12 +39,15 @@ export default async function DashboardLayout({
               Contributor dashboard
             </p>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <NavTabs tabs={tabs} />
+            <CommandPalette items={commandItems} />
+            <ActivityBell events={activity} />
+            <ThemeToggle />
             <form action={signOut}>
               <button
                 type="submit"
-                className="ml-2 rounded-lg border border-[var(--line)] px-3 py-1.5 text-sm"
+                className="ml-1 rounded-lg border border-[var(--line)] px-3 py-1.5 text-sm"
               >
                 Sign out
               </button>

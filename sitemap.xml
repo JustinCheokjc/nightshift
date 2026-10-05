@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Nightshift is currently a single-page app with hash-based in-page
+  navigation (#contributors, #buyers, #trust, #about, #join) rather than
+  separate crawlable URLs, so this sitemap lists just the one page.
+  Replace the placeholder domain below with the real one once deployed.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://nightshift.example/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

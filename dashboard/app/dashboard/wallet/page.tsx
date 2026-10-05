@@ -79,7 +79,17 @@ export default async function WalletPage({
       </div>
 
       <Reveal className="card">
-        <h3 className="mb-3 text-sm font-bold">Ledger</h3>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-bold">Ledger</h3>
+          {rows.length > 0 && (
+            <a
+              href="/dashboard/wallet/export"
+              className="rounded-lg border border-[var(--line)] px-3 py-1 text-xs"
+            >
+              Export CSV
+            </a>
+          )}
+        </div>
         {!rows.length ? (
           <p className="text-sm text-[var(--mut)]">
             No ledger entries yet. Load demo data from the Devices page to see

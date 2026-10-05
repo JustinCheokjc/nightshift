@@ -25,7 +25,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0e1d23;
     --surf: #152a32;
     --ink: #e4eef0;
@@ -38,6 +38,24 @@
     --bad: #e27b67;
     --on: #0e1d23;
   }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0e1d23;
+  --surf: #152a32;
+  --ink: #e4eef0;
+  --mut: #8fa8b2;
+  --line: #25404a;
+  --idle: #3cbfae;
+  --use: #4a6672;
+  --sleep: #1e343c;
+  --amber: #e0a93a;
+  --bad: #e27b67;
+  --on: #0e1d23;
+}
+
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {

@@ -11,6 +11,7 @@ import {
 import Kpi from "@/components/Kpi";
 import Reveal from "@/components/Reveal";
 import WeeklyTrendChart from "@/components/WeeklyTrendChart";
+import RealtimeDevices from "@/components/RealtimeDevices";
 
 const EARNING_RATE_PER_CORE_HOUR = 0.07; // S$, placeholder until the pilot provides measured data
 const IDLE_POWER_DRAW_KW = 0.08;
@@ -80,6 +81,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <RealtimeDevices userId={profile!.id} />
       <div>
         <h2 className="text-xl font-bold">Your devices</h2>
         <p className="text-sm text-[var(--mut)]">
