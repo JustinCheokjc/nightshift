@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nightshift Market Simulator</title>
+<title>Nightshift Market</title>
 <link rel="icon" href="/logo.svg">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@500;600&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
 <style>
@@ -152,7 +152,7 @@ td.neg { color: var(--bad); }
 <header class="top">
   <div class="in">
     <div class="bar1">
-      <div class="brand"><img src="/logo.svg" alt=""><b>Nightshift Market Simulator</b></div>
+      <div class="brand"><img src="/logo.svg" alt=""><b>Nightshift Market</b></div>
       <div class="controls">
         <span class="clock" id="clock" aria-live="off">…</span>
         <button id="pause" type="button">Pause</button>
@@ -290,6 +290,7 @@ td.neg { color: var(--bad); }
     <div class="card" id="report-body"></div>
     <div class="card"><h2>Saved runs</h2><div class="tbl"><table><thead><tr><th>Run</th><th>Saved</th><th class="num">Sim days</th><th class="num">Devices</th><th class="num">Buyers paid</th><th class="num">Profit</th><th class="num">Margin</th><th class="num">Profit / month</th><th class="num">Late refunds</th></tr></thead><tbody id="runs"></tbody></table></div></div>
   </section>
+  <p class="mut small" style="text-align:center;margin-top:24px">Simulated market · no real money</p>
 </main>
 
 <script>
@@ -590,7 +591,7 @@ async function renderTrust(s) {
 
 async function renderReport(s) {
   const k = s.kpi, c = s.cfg;
-  $("report-body").innerHTML = `<h2>Nightshift market simulator: run report</h2>
+  $("report-body").innerHTML = `<h2>Nightshift market: run report</h2>
     <p class="mut small" style="margin-bottom:12px">${esc(s.scenarios[s.scenario] || "Custom")} · ${s.elapsed_days.toFixed(1)} simulated days · ${k.devices} devices · simulated data, no real money</p>
     <div class="kpis" style="margin-bottom:14px">
       <div class="kpi"><b>${sgd(k.revenue)}</b><span>Buyers paid</span></div>
@@ -653,7 +654,7 @@ async function refresh() {
       if (tab === "trust") await renderTrust(S);
       if (tab === "report" && true) await renderReport(S);
     }
-  } catch { $("clock").textContent = "Simulator stopped. Run: python marketplace.py"; }
+  } catch { $("clock").textContent = "Market stopped. Run: python marketplace.py"; }
   busy = false;
 }
 setInterval(refresh, 1000);
