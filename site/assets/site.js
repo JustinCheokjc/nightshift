@@ -4,7 +4,7 @@ var PAGE=document.body.dataset.page;
 // Old single-page links (/#join, /#faq ...) now live on their own pages
 (function(){var h=location.hash.slice(1),R={contributors:"/contributors/",buyers:"/buyers/",pricing:"/buyers/",trust:"/trust/",about:"/about/",faq:"/about/#faq",join:"/join/"};if(PAGE==="home"&&R[h])location.replace(R[h])})();
 var EV=[];function track(n,d){var e={n:n,d:d||{},t:Date.now()};EV.push(e);window.dataLayer=window.dataLayer||[];window.dataLayer.push(e);if(window.posthog)try{window.posthog.capture(n,d||{})}catch(x){}if(window.NS_TRACK)try{window.NS_TRACK(e)}catch(x){}}
-var V=[["home","Home","/"],["contributors","Contributors","/contributors/"],["buyers","Buyers","/buyers/"],["trust","Trust","/trust/"],["about","About","/about/"],["signin","Sign in","https://nightshift-dashboard-navy.vercel.app/login"],["join","Join","/join/"]];
+var V=[["home","Home","/"],["contributors","Contributors","/contributors/"],["buyers","Buyers","/buyers/"],["trust","Trust","/trust/"],["about","About","/about/"],["signin","Sign in","https://nightshift-user.vercel.app/login"],["join","Join","/join/"]];
 var nv=document.getElementById("nv"),$=function(i){return document.getElementById(i)},mb=$("mb2");
 mb.onclick=function(){var o=nv.classList.toggle("open");mb.setAttribute("aria-expanded",o)};
 document.addEventListener("keydown",function(e){if(e.key==="Escape"){nv.classList.remove("open");mb.setAttribute("aria-expanded","false")}});
