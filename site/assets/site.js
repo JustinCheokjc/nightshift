@@ -90,7 +90,7 @@ $("jp").onclick=function(e){var b=e.target.closest("button");if(!b)return;if(man
 var tk=false;window.addEventListener("scroll",function(){if(!tk){tk=true;requestAnimationFrame(function(){tk=false;tick();pbar()})}},{passive:true});
 
 // Home: capacity estimator
-var cores=8,shown=0,raf;function calc(){var h=+$("ch").value;$("chv").textContent=h;$("bf").style.width=h/24*100+"%";$("dp").textContent="That is "+Math.round(h/24*100)+"% of your day.";var to=Math.round(h*cores*30*.75),from=shown,t0=performance.now();cancelAnimationFrame(raf);(function st(n){var k=Math.min(1,(n-t0)/450),e=1-Math.pow(1-k,3);shown=Math.round(from+(to-from)*e);$("cr").textContent=shown.toLocaleString();if(k<1)raf=requestAnimationFrame(st)})(t0)}
+var cores=8,shown=0,raf;function calc(){var h=+$("ch").value;$("chv").textContent=h;$("bf").style.width=h/24*100+"%";$("dp").textContent="That is "+Math.round(h/24*100)+"% of your day.";if($("ce")){var nt=h*cores*30*.75*.014-h*30*.015*.3;$("ce").textContent="Worth up to about S$"+Math.max(0,nt).toFixed(2)+" a month after electricity.";}var to=Math.round(h*cores*30*.75),from=shown,t0=performance.now();cancelAnimationFrame(raf);(function st(n){var k=Math.min(1,(n-t0)/450),e=1-Math.pow(1-k,3);shown=Math.round(from+(to-from)*e);$("cr").textContent=shown.toLocaleString();if(k<1)raf=requestAnimationFrame(st)})(t0)}
 if($("ch")){
 var cu=0;$("ch").oninput=function(){if(!cu){cu=1;track("calc_used")}calc()};document.querySelectorAll("#lt button").forEach(function(b){b.onclick=function(){cores=+b.dataset.c;document.querySelectorAll("#lt button").forEach(function(x){x.setAttribute("aria-pressed",x===b)});calc()}});
 calc()}

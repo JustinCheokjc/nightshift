@@ -64,6 +64,12 @@ function LoginForm() {
         <p className="mt-1 text-sm text-[var(--mut)]">
           Sign in to your contributor dashboard.
         </p>
+        <p className="mt-1 text-sm text-[var(--mut)]">
+          New to Nightshift?{" "}
+          <a href="https://nightshift-site-psi.vercel.app/contributors/" className="text-[var(--idle)] underline">
+            See how the pilot works
+          </a>
+        </p>
       </div>
 
       {status === "sent" ? (
