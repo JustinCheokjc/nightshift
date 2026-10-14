@@ -405,7 +405,8 @@ def report_loop(cfg, quiet):
         log("The agent is already running on this computer.", quiet)
         return
     url = f"{cfg['server']}/api/agent/report"
-    log(f"Reporting to {cfg['server']} as \"{cfg['name']}\" every {INTERVAL_SEC}s.", quiet)
+    interval = min(max(int(cfg.get("interval_sec", INTERVAL_SEC)), 10), 600)  # set in config.json
+    log(f"Reporting to {cfg['server']} as \"{cfg['name']}\" every {interval}s.", quiet)
     if not quiet:
         print("Leave this window open, or close it if it starts automatically at login. Ctrl+C stops it.\n", flush=True)
     pending = queue_load()
@@ -414,7 +415,7 @@ def report_loop(cfg, quiet):
             started = time.monotonic()
             pending.append(reading())
             try:
-                res = post(url, {"interval_sec": INTERVAL_SEC, "readings": pending[-1500:]}, cfg["token"])
+                res = post(url, {"interval_sec": interval, "readings": pending[-1500:]}, cfg["token"])
                 pending = []
                 if res.get("paused"):
                     log("Paused from the dashboard. Not recording.", quiet)
@@ -430,7 +431,7 @@ def report_loop(cfg, quiet):
             except (urllib.error.URLError, OSError, ValueError) as e:
                 log(f"Offline ({getattr(e, 'reason', e)}). Saved {len(pending)} reading(s) to send later.", quiet)
             queue_save(pending)
-            time.sleep(max(1, INTERVAL_SEC - (time.monotonic() - started)))
+            time.sleep(max(1, interval - (time.monotonic() - started)))
     except KeyboardInterrupt:
         pass
     finally:

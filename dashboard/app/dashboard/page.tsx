@@ -82,12 +82,12 @@ export default async function DashboardPage() {
   const usableIdleToday = sumBy(todaySummaries, (s) => s.usable_idle_hours);
   const coreHoursWeek = sumBy(summaries ?? [], (s) => s.core_hours);
   const usableIdleWeek = sumBy(summaries ?? [], (s) => s.usable_idle_hours);
-  const estEarnings = Math.round(
-    coreHoursWeek * EARNING_RATE_PER_CORE_HOUR * 100
-  ) / 100;
-  const estElectricity = Math.round(
-    usableIdleWeek * IDLE_POWER_DRAW_KW * (profile?.electricity_rate ?? 0.31) * 100
-  ) / 100;
+  const estEarnings = coreHoursWeek * EARNING_RATE_PER_CORE_HOUR;
+  const estElectricity =
+    usableIdleWeek * IDLE_POWER_DRAW_KW * (profile?.electricity_rate ?? 0.31);
+  // Show small amounts with enough precision that the first minutes are visible.
+  const moneyDecimals = (v: number) => (v < 0.1 ? 4 : v < 10 ? 3 : 2);
+  const idleInMinutes = usableIdleToday < 1;
 
   const trendByDate = new Map<string, number>();
   for (const s of summaries ?? []) {
@@ -110,10 +110,15 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Kpi value={usableIdleToday} decimals={1} suffix=" h" label="Usable idle today" />
+        <Kpi
+          value={idleInMinutes ? usableIdleToday * 60 : usableIdleToday}
+          decimals={1}
+          suffix={idleInMinutes ? " min" : " h"}
+          label="Usable idle today"
+        />
         <Kpi value={coreHoursWeek} suffix=" core-h" label="Capacity this week" />
-        <Kpi value={estEarnings} decimals={2} prefix="S$" label="Est. potential earnings" />
-        <Kpi value={estElectricity} decimals={2} prefix="S$" label="Est. electricity cost" />
+        <Kpi value={estEarnings} decimals={moneyDecimals(estEarnings)} prefix="S$" label="Est. potential earnings" />
+        <Kpi value={estElectricity} decimals={moneyDecimals(estElectricity)} prefix="S$" label="Est. electricity cost" />
       </div>
       <p className="-mt-4 text-xs text-[var(--mut)]">
         Capacity estimate only. Real earnings depend on demand and are not
