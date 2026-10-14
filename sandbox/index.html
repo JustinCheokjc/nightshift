@@ -119,6 +119,25 @@ td.neg { color: var(--bad); }
 .links a { text-decoration: none; border: 1px solid var(--line); border-radius: 8px; padding: 7px 11px; color: var(--ink); font-size: 13px; }
 .links a:hover { border-color: var(--idle); }
 .empty { color: var(--mut); padding: 16px 0; text-align: center; }
+.custs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(270px, 100%), 1fr)); gap: 12px; }
+.cust { border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 8px; align-content: start; }
+.cust.off { opacity: .55; }
+.cust.mine { border-color: var(--idle); }
+.cust .ctop { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+.cust .ctop b { display: block; font-size: 15px; }
+.cust .seg { font-size: 12px; color: var(--mut); }
+.cust .note { font-size: 13px; color: var(--mut); }
+.cust dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 0; font-size: 12px; }
+.cust dt { color: var(--mut); }
+.cust dd { margin: 0; text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.cust .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 8px 0; border-block: 1px solid var(--line); }
+.cust .stats div { text-align: center; }
+.cust .stats b { display: block; font: 600 14px var(--mono); }
+.cust .stats span { font-size: 11px; color: var(--mut); }
+.cust .acts { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.cust .acts label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+.cust .acts input { width: 16px; height: 16px; accent-color: var(--idle); }
+.kindpill { font: 600 10px/1.8 var(--mono); padding: 0 6px; border-radius: 4px; background: var(--sleep); color: var(--ink); }
 .toggle { display: flex; align-items: center; gap: 8px; font-weight: 600; }
 .toggle input { width: 18px; height: 18px; accent-color: var(--idle); }
 @media print {
@@ -217,9 +236,10 @@ td.neg { color: var(--bad); }
       <div class="quote" id="quote"></div>
       <p class="note" id="q-note" aria-live="polite"></p>
     </div>
-    <div class="card"><h2>Buyers</h2><div class="tbl"><table>
-      <thead><tr><th>Buyer</th><th>Wants</th><th>Status</th><th>Satisfaction</th><th class="num">Orders</th><th class="num">On time</th><th class="num">Refunds</th><th class="num">Spent</th><th></th></tr></thead>
-      <tbody id="buyer-rows"></tbody></table></div></div>
+    <div class="card"><div class="row" style="margin-bottom:10px"><h2 style="margin:0">Customers <span class="mut small" style="font-weight:500">(fictional)</span></h2>
+      <span class="small mut" id="cust-sum"></span></div>
+      <p class="mut small" style="margin-bottom:12px">Each customer orders at its own busy hours, with its own order sizes, deadlines and price limits. Switch a customer off to see how the market does without it.</p>
+      <div class="custs" id="buyer-rows"></div></div>
     <div class="card"><div class="row" style="align-items:center;margin-bottom:10px"><h2 style="margin:0">Invoices</h2>
       <span class="links"><select id="inv-filter" aria-label="Filter invoices by buyer"><option value="">All buyers</option></select><a href="/export/invoices.csv">Export CSV</a></span></div>
       <div class="tbl"><table><thead><tr><th>Order</th><th>Buyer</th><th>Placed</th><th>Delivered</th><th class="num">Hours</th><th class="num">Unit price</th><th class="num">Price</th><th class="num">Refund</th><th class="num">Net</th><th>Status</th></tr></thead>
@@ -475,12 +495,34 @@ async function updateQuote() {
 ["q-kind", "q-hours", "q-deadline"].forEach((id) => $(id).addEventListener("input", () => { clearTimeout(quoteTimer); quoteTimer = setTimeout(updateQuote, 200); }));
 
 async function renderBuyers(s) {
-  $("buyer-rows").innerHTML = s.buyers.map((b) => `<tr class="${b.manual ? "mine" : ""}">
-    <td>${esc(b.name)}</td><td>${esc(b.what)}</td><td><span class="pill ${b.status}">${b.status}</span></td>
-    <td><span class="sat"><i style="width:${(b.satisfaction * 100).toFixed(0)}%"></i></span></td>
-    <td class="num">${b.orders}</td><td class="num">${b.delivered - b.late}/${b.delivered}</td>
-    <td class="num">${sgd(b.refunds, 3)}</td><td class="num">${sgd(b.spent, 3)}</td>
-    <td>${b.manual ? "" : `<button type="button" data-order="${esc(b.name)}">Order now</button>`}</td></tr>`).join("");
+  const hh = (h) => `${String(h % 24).padStart(2, "0")}:00`;
+  const hours = (b) => !b.hours.length ? "When you order" : b.hours.some(([a, z]) => a === 0 && z === 24) ? "All day"
+    : b.hours.map(([a, z]) => `${hh(a)}–${hh(z)}`).join(", ");
+  const unit = (b) => (b.kind === "cpu" ? "core-h" : "GPU-h");
+  const status = (b) => !b.enabled ? ["", "switched off"] : b.status === "left" ? ["left", "left"] : ["active", "active"];
+  const active = s.buyers.filter((b) => b.enabled && b.status === "active").length;
+  $("cust-sum").textContent = `${active} of ${s.buyers.length} customers ordering`;
+  $("buyer-rows").innerHTML = s.buyers.map((b) => {
+    const st = status(b);
+    return `<div class="cust ${b.enabled ? "" : "off"} ${b.manual ? "mine" : ""}">
+      <div class="ctop"><div><b>${esc(b.name)}</b><span class="seg">${esc(b.segment)}</span></div>
+        <span class="kindpill">${b.kind.toUpperCase()}</span></div>
+      <p class="note">${esc(b.what)}. ${esc(b.note)}</p>
+      <dl><dt>Busy hours</dt><dd>${hours(b)}</dd>
+        <dt>Typical order</dt><dd>${b.size[0]}–${b.size[1]} ${unit(b)}</dd>
+        <dt>Needs it within</dt><dd>${b.deadline_h} h</dd>
+        <dt>Pays</dt><dd>${b.premium === 1 ? "market price" : `${b.premium > 1 ? "+" : "−"}${Math.abs(Math.round((b.premium - 1) * 100))}% vs market`}</dd>
+        ${b.max_surge ? `<dt>Stops buying above</dt><dd>×${b.max_surge} surge</dd>` : ""}
+        <dt>Satisfaction</dt><dd><span class="sat"><i style="width:${(b.satisfaction * 100).toFixed(0)}%"></i></span></dd></dl>
+      <div class="stats"><div><b>${b.orders}</b><span>Orders</span></div>
+        <div><b>${b.delivered - b.late}/${b.delivered}</b><span>On time</span></div>
+        <div><b>${b.declined}</b><span>Declined</span></div>
+        <div><b>${sgd(b.spent, 2)}</b><span>Spent</span></div></div>
+      <div class="acts"><span class="pill ${st[0]}">${st[1]}</span>
+        ${b.manual ? "" : `<label><input type="checkbox" data-toggle="${esc(b.name)}" ${b.enabled ? "checked" : ""}> In market</label>
+        <button type="button" data-order="${esc(b.name)}">Order now</button>`}</div>
+    </div>`;
+  }).join("");
   const f = $("inv-filter"), current = f.value;
   const names = s.buyers.map((b) => b.name);
   if (f.options.length - 1 !== names.length) f.innerHTML = `<option value="">All buyers</option>` + names.map((n) => `<option>${esc(n)}</option>`).join("");
@@ -563,6 +605,10 @@ async function renderReport(s) {
         <span>Late-delivery refunds</span><span class="num">${sgd(-k.refunds)}</span>
         <span>Rechecking results</span><span class="num">${sgd(-k.verify_cost)}</span>
         <span class="total">Nightshift profit</span><span class="num total">${sgd(k.profit)}</span></div></div>
+      <div><h3>Customers</h3><div class="stmt">
+        ${s.buyers.filter((b) => b.orders || b.declined).sort((a, b) => b.spent - a.spent).map((b) =>
+          `<span>${esc(b.name)} <span class="mut small">${b.delivered - b.late}/${b.delivered} on time${b.declined ? `, ${b.declined} declined` : ""}</span></span><span class="num">${sgd(b.spent)}</span>`).join("")
+          || `<span class="mut">No orders yet</span><span></span>`}</div></div>
       <div><h3>Contributors by device type (net per month)</h3><div class="stmt">
         ${Object.values(s.classes).map((x) => `<span>${esc(x.label)} (${x.count})</span><span class="num">${sgd(x.net_per_month)}</span>`).join("")}</div></div>
       <div><h3>Work delivered</h3><div class="stmt">
@@ -624,6 +670,7 @@ $("f-apply").addEventListener("click", () => {
 });
 $("f-live").addEventListener("change", (e) => control({ action: "config", values: { live_fleet: e.target.checked } }));
 $("buyer-rows").addEventListener("click", (e) => { const b = e.target.closest("[data-order]"); if (b) { slowTick = 0; control({ action: "order", buyer: b.dataset.order }); } });
+$("buyer-rows").addEventListener("change", (e) => { const t = e.target.closest("[data-toggle]"); if (t) { slowTick = 0; control({ action: "buyer", name: t.dataset.toggle, enabled: t.checked }); } });
 $("inv-filter").addEventListener("change", () => { slowTick = 0; refresh(); });
 $("st-device").addEventListener("change", (e) => { selDevice = e.target.value; slowTick = 0; refresh(); });
 $("q-place").addEventListener("click", async () => {

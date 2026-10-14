@@ -76,17 +76,63 @@ SCENARIOS = {
     "city":     {"label": "City scale (1,000 devices)", "fleet": {"laptop": 600, "desktop": 250, "gaming": 150}},
 }
 
-# Fictional buyers. Order rates are per simulated hour per 10 devices of fleet.
+# Fictional customers. "rate" is orders per simulated hour per 10 devices of fleet
+# during the customer's busy hours; "off_peak" scales it outside them.
+# "premium" multiplies the base price (above 1 = pays extra for speed).
+# GPU customers decline new orders when surge pricing exceeds "max_surge".
+# "patience" is how much satisfaction a late delivery costs.
 BUYERS = [
-    {"name": "Pixelforge Studio", "kind": "cpu", "what": "Animation render frames", "premium": 1.00,
-     "size": (4, 16), "rate_day": 1.0, "rate_night": 0.5, "deadline_h": 6},
-    {"name": "Lumen Bio Lab", "kind": "cpu", "what": "Batch simulations", "premium": 0.80,
-     "size": (8, 32), "rate_day": 0.5, "rate_night": 0.5, "deadline_h": 12},
-    {"name": "Kopi Analytics", "kind": "cpu", "what": "Overnight data pipelines", "premium": 0.90,
-     "size": (6, 24), "rate_day": 0.2, "rate_night": 0.9, "deadline_h": 10},
-    {"name": "TinyLLM Labs", "kind": "gpu", "what": "AI inference batches", "premium": 1.00,
-     "size": (1, 4), "rate_day": 0.35, "rate_night": 0.45, "deadline_h": 6},
+    {"name": "Pixelforge Studio", "segment": "Animation studio", "kind": "cpu", "what": "Animation render frames",
+     "note": "Renders the day's shots before the evening review.",
+     "premium": 1.00, "size": (4, 16), "rate": 0.8, "hours": [(9, 19)], "off_peak": 0.4,
+     "deadline_h": 6, "max_surge": None, "patience": 0.12},
+    {"name": "Orbit Mobile Games", "segment": "Game developer", "kind": "cpu", "what": "Build and test runs",
+     "note": "Developers wait on these builds, so it pays extra for speed.",
+     "premium": 1.20, "size": (2, 6), "rate": 1.5, "hours": [(10, 19)], "off_peak": 0.1,
+     "deadline_h": 2, "max_surge": None, "patience": 0.15},
+    {"name": "Lumen Bio Lab", "segment": "University research lab", "kind": "cpu", "what": "Protein simulations",
+     "note": "Steady, patient demand. Cares about price, not speed.",
+     "premium": 0.80, "size": (8, 32), "rate": 0.4, "hours": [(0, 24)], "off_peak": 1.0,
+     "deadline_h": 12, "max_surge": None, "patience": 0.06},
+    {"name": "Kopi Analytics", "segment": "Data consultancy", "kind": "cpu", "what": "Overnight data pipelines",
+     "note": "Runs client reports overnight so they're ready by 9am.",
+     "premium": 0.90, "size": (6, 24), "rate": 0.8, "hours": [(22, 6)], "off_peak": 0.2,
+     "deadline_h": 10, "max_surge": None, "patience": 0.10},
+    {"name": "Merlion Weather Co", "segment": "Weather forecasting", "kind": "cpu", "what": "Forecast ensemble runs",
+     "note": "Large bursts twice a day, when new weather data lands.",
+     "premium": 0.75, "size": (40, 120), "rate": 0.12, "hours": [(0, 4), (12, 14)], "off_peak": 0.0,
+     "deadline_h": 6, "max_surge": None, "patience": 0.10},
+    {"name": "Harbour Freight", "segment": "Logistics", "kind": "cpu", "what": "Delivery route planning",
+     "note": "Plans the day's delivery routes before the trucks leave at 7am.",
+     "premium": 1.00, "size": (10, 30), "rate": 0.5, "hours": [(4, 7)], "off_peak": 0.05,
+     "deadline_h": 3, "max_surge": None, "patience": 0.15},
+    {"name": "TinyLLM Labs", "segment": "AI startup", "kind": "gpu", "what": "AI inference batches",
+     "note": "Price-sensitive. Moves work to the cloud if GPU prices surge.",
+     "premium": 1.00, "size": (1, 4), "rate": 0.3, "hours": [(9, 23)], "off_peak": 0.5,
+     "deadline_h": 6, "max_surge": 1.6, "patience": 0.12},
+    {"name": "Kampung Pictures", "segment": "Indie film studio", "kind": "gpu", "what": "GPU video rendering",
+     "note": "Sends finished edits in the evening for overnight rendering.",
+     "premium": 0.90, "size": (2, 6), "rate": 0.12, "hours": [(18, 24)], "off_peak": 0.3,
+     "deadline_h": 12, "max_surge": 2.0, "patience": 0.08},
+    {"name": "Shophouse AI", "segment": "AI agency", "kind": "gpu", "what": "Model fine-tuning",
+     "note": "Big, flexible jobs. Only buys when GPUs are cheap.",
+     "premium": 0.85, "size": (6, 16), "rate": 0.04, "hours": [(0, 24)], "off_peak": 1.0,
+     "deadline_h": 24, "max_surge": 1.3, "patience": 0.05},
+    {"name": "Tutorly", "segment": "Education platform", "kind": "gpu", "what": "Lecture transcription",
+     "note": "Transcribes lectures in school hours; needs them back the same afternoon.",
+     "premium": 1.10, "size": (1, 2), "rate": 0.25, "hours": [(8, 17)], "off_peak": 0.1,
+     "deadline_h": 3, "max_surge": 2.5, "patience": 0.15},
 ]
+
+
+def busy_factor(b, hour):
+    """1 inside the customer's busy hours, b["off_peak"] outside."""
+    for start, end in b["hours"]:
+        inside = start <= hour < end if start < end else (hour >= start or hour < end)
+        if inside:
+            return 1.0
+    return b["off_peak"]
+
 
 REGIONS = [
     (-0.5, 0.0, 3.0), (-0.7436, 0.1318, 0.012), (-0.1011, 0.9563, 0.025), (-1.2507, 0.0201, 0.004),
@@ -159,11 +205,12 @@ class Market:
                 self._add_buyer(b)
             self.devices = {}
             self._build_fleet()
-            self.log(f"Sandbox started: {self._fleet_size()} devices, {len(BUYERS)} fictional buyers.")
+            self.log(f"Sandbox started: {self._fleet_size()} devices, {len(BUYERS)} fictional customers.")
 
     def _add_buyer(self, template, manual=False):
         self.buyers[template["name"]] = {**template, "manual": manual, "orders": 0, "spent": 0.0, "refunds": 0.0,
-                                         "delivered": 0, "late": 0, "satisfaction": 1.0, "status": "active"}
+                                         "delivered": 0, "late": 0, "satisfaction": 1.0, "status": "active",
+                                         "declined": 0, "lost": 0.0, "enabled": True}
 
     def _id(self, prefix):
         self.seq += 1
@@ -281,11 +328,12 @@ class Market:
                 "eta_hours": None if eta is None else round(eta, 2), "capacity": rate}
 
     # =============================================================== orders
-    def place_order(self, buyer_name, hours=None, deadline_h=None, kind=None):
+    def place_order(self, buyer_name, hours=None, deadline_h=None, kind=None, auto=False):
         b = self.buyers.get(buyer_name)
         if not b:
-            b = {"name": buyer_name, "kind": kind or "cpu", "what": "Custom compute order", "premium": 1.0,
-                 "size": (4, 16), "rate_day": 0, "rate_night": 0, "deadline_h": 8}
+            b = {"name": buyer_name, "segment": "Your company", "kind": kind or "cpu", "what": "Custom compute order",
+                 "note": "Orders placed from the buyer portal.", "premium": 1.0, "size": (4, 16), "rate": 0,
+                 "hours": [], "off_peak": 0, "deadline_h": 8, "max_surge": None, "patience": 0.12}
             self._add_buyer(b, manual=True)
             b = self.buyers[buyer_name]
         kind = kind or b["kind"]
@@ -295,6 +343,13 @@ class Market:
         n = max(1, int(round(hours / unit_h)))
         hours = n * unit_h
         q = self.quote(kind, hours, b["premium"])
+        if auto and b["max_surge"] and q["surge"] > b["max_surge"]:
+            b["declined"] += 1
+            b["lost"] += q["price"]
+            if self._fleet_size() <= 30 or b["declined"] % 10 == 1:
+                self.log(f"{b['name']} declined to order: GPU price ×{q['surge']} is above its limit of "
+                         f"×{b['max_surge']}.", "warn")
+            return None
         deadline_h = deadline_h or b["deadline_h"]
         o = {"id": self._id("o"), "buyer": b["name"], "kind": kind, "what": b["what"], "hours": hours,
              "unit_price": q["unit_price"], "surge": q["surge"], "price": q["price"], "created": self.now,
@@ -328,19 +383,18 @@ class Market:
             dmin = dt * self.sim_min_per_sec
             self.now += dmin
             hour = int(self.now % 1440) // 60
-            night = hour >= 22 or hour < 7
             scale = max(self._fleet_size(), 1) / 10 * self.cfg["demand"]
 
             for b in self.buyers.values():
                 if b["status"] == "left" and self.now - b.get("left_at", self.now) >= 1440:
                     b.update(status="active", satisfaction=0.6)
                     self.log(f"{b['name']} came back to try Nightshift again.", "order")
-                if b["manual"] or b["status"] != "active":
+                if b["manual"] or b["status"] != "active" or not b["enabled"]:
                     continue
-                rate = (b["rate_night"] if night else b["rate_day"]) * scale * max(b["satisfaction"], 0.35)
+                rate = b["rate"] * busy_factor(b, hour) * scale * max(b["satisfaction"], 0.35)
                 expected = rate * dmin / 60
                 for _ in range(min(5, self._poisson(expected))):
-                    self.place_order(b["name"])
+                    self.place_order(b["name"], auto=True)
 
             switch = 1 - math.exp(-dmin / 45)
             for d in self.devices.values():
@@ -549,7 +603,7 @@ class Market:
             b["refunds"] += refund
             b["spent"] -= refund
             self.money["refunds"] += refund
-            b["satisfaction"] = max(0.0, b["satisfaction"] - 0.12)
+            b["satisfaction"] = max(0.0, b["satisfaction"] - b["patience"])
             if not b["manual"] or b["delivered"] < 50:
                 self.log(f"Delivered {o['buyer']}'s order late; refunded S${refund:.3f}.", "warn")
             if b["satisfaction"] < 0.35 and b["status"] == "active" and not b["manual"]:
@@ -677,14 +731,18 @@ class Market:
                 "cfg": self.cfg, "kpi": self.kpis(), "classes": self.class_economics(),
                 "trust": {**self.trust, "verify_cost": self.money["verify_cost"],
                           "suspended": [self.device_row(d) for d in self.devices.values() if d["suspended"]]},
-                "buyers": [{k: b[k] for k in ("name", "kind", "what", "premium", "orders", "spent", "refunds",
-                                              "delivered", "late", "satisfaction", "status", "manual")}
-                           for b in self.buyers.values()],
+                "buyers": [self.buyer_row(b) for b in self.buyers.values()],
                 "devices": [self.device_row(d) for d in devs[:40]],
                 "orders": [self.order_row(o) for o in self.recent_orders(12)],
                 "series": self.series[-200:],
                 "events": list(reversed(self.events[-50:])),
             }
+
+    @staticmethod
+    def buyer_row(b):
+        return {k: b[k] for k in ("name", "segment", "kind", "what", "note", "premium", "size", "hours", "deadline_h",
+                                  "max_surge", "orders", "spent", "refunds", "delivered", "late", "declined", "lost",
+                                  "satisfaction", "status", "manual", "enabled")}
 
     def order_row(self, o):
         return {"id": o["id"], "buyer": o["buyer"], "kind": o["kind"], "what": o["what"], "hours": o["hours"],
@@ -719,8 +777,8 @@ class Market:
             return {"label": label or SCENARIOS.get(self.scenario, {}).get("label", self.scenario),
                     "saved_at": datetime.now().isoformat(timespec="seconds"), "sim_days": round(self.elapsed_days(), 2),
                     "cfg": self.cfg, "kpi": self.kpis(), "classes": self.class_economics(), "trust": dict(self.trust),
-                    "buyers": [{k: b[k] for k in ("name", "orders", "delivered", "late", "spent", "status")}
-                               for b in self.buyers.values()]}
+                    "buyers": [{k: b[k] for k in ("name", "segment", "orders", "delivered", "late", "declined",
+                                                  "spent", "lost", "status")} for b in self.buyers.values()]}
 
     # ============================================================ live fleet
     def sync_live(self):
@@ -875,6 +933,10 @@ class Handler(BaseHTTPRequestHandler):
                     mk.apply_config(body.get("values") or {})
                 elif a == "scenario":
                     mk.apply_scenario(body.get("name"))
+                elif a == "buyer" and body.get("name") in mk.buyers:
+                    b = mk.buyers[body["name"]]
+                    b["enabled"] = bool(body.get("enabled"))
+                    mk.log(f"{b['name']} {'joined' if b['enabled'] else 'left'} the market (switched by you).", "order")
                 elif a == "order":
                     name = str(body.get("buyer") or "").strip()[:60]
                     if not name:
