@@ -485,3 +485,22 @@ body[data-page=about] .sec-h h2{font-family:"Iowan Old Style","Palatino Linotype
 .film-snd svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .film-snd .on{display:none}.film-snd.is-on .on{display:inline}.film-snd.is-on .off{display:none}
 .film-snd:focus-visible{outline:2px solid #46D1BF;outline-offset:2px}
+.tile.pq{font:inherit;color:inherit;cursor:pointer;border:1px solid transparent}
+.tile.pq:hover{transform:translateY(-2px)}
+.tile.pq:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.tile.pq .sl{opacity:0;transition:opacity .3s}
+.tile.pq.rev{cursor:default;transform:none;animation:pqpop .35s cubic-bezier(.2,.7,.2,1)}
+.tile.pq.yes{border-color:color-mix(in srgb,var(--acc) 55%,transparent);background:color-mix(in srgb,var(--acc) 10%,var(--surf))}
+.tile.pq.yes span{color:var(--acc);font-weight:600}
+.tile.pq.no{border-color:color-mix(in srgb,#FF6B5A 45%,transparent)}
+.tile.pq.no span{color:#FF8A7A;font-weight:600}
+.tile.pq.no .sl{opacity:1}
+.privacy-strip{grid-template-columns:repeat(3,1fr)}
+@media (max-width:560px){.privacy-strip{grid-template-columns:repeat(2,1fr)}}
+.big span[style]{letter-spacing:0}
+.sim .chips{margin-bottom:22px}
+#simv{display:inline-block}
+#simv.pop{animation:pqpop .35s cubic-bezier(.2,.7,.2,1)}
+.how{margin-top:22px}
+@keyframes pqpop{0%{transform:scale(.94)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.tile.pq.rev,#simv.pop{animation:none}}
