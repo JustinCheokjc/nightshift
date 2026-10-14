@@ -17,7 +17,7 @@ var keys=tx(256,128,function(x,w,h){x.fillStyle="#0c161b";x.fillRect(0,0,w,h);x.
 function spr(col,sz,op){var s=new T.Sprite(new T.SpriteMaterial({map:glow,color:col,blending:T.AdditiveBlending,transparent:true,depthWrite:false,opacity:op}));s.scale.set(sz,sz,1);return s}
 var fl=new T.Mesh(new T.CircleGeometry(16,64),new T.MeshStandardMaterial({color:0x0F232B,roughness:.9}));fl.rotation.x=-Math.PI/2;fl.position.y=-.06;fl.receiveShadow=true;G.add(fl);
 var gr=new T.GridHelper(26,26,0x24505a,0x173943);gr.position.y=-.04;gr.material.transparent=true;gr.material.opacity=.45;G.add(gr);
-var L=[],B=[],LED=[],ST=[],idle=[],LM=[],night=true,stage=0,i,j,k,m;
+var L=[],B=[],LED=[],ST=[],idle=[],LM=[],night=true,stage=2,i,j,k,m;
 for(i=0;i<6;i++){var g=new T.Group(),cn=document.createElement("canvas");cn.width=160;cn.height=100;var tex=new T.CanvasTexture(cn);tex.encoding=T.sRGBEncoding;
 g.userData={i:i,cx:cn.getContext("2d"),tex:tex};
 var base=new T.Mesh(new T.BoxGeometry(1.4,.1,1),M(0x40596a));base.castShadow=true;g.add(base);
@@ -63,7 +63,7 @@ document.querySelectorAll("#s3 button").forEach(function(b,n){b.onclick=function
 document.querySelectorAll("#d3 button").forEach(function(b,n){b.onclick=function(){night=n===1;sel("d3",n);for(i=0;i<6;i++)if(ST[i]!==2)ST[i]=night?0:(i===2?0:1);apply();say();track("3d_time",{night:night})}});
 var FO=[[0,1],[-5,.62],[0,.5],[5,.62]];
 document.querySelectorAll("#f3 button").forEach(function(b,n){b.onclick=function(){fx=FO[n][0];zt=FO[n][1];sel("f3",n);track("3d_focus",{i:n})}});
-$("zi").onclick=function(){zt=Math.max(.45,zt*.8)};$("zo").onclick=function(){zt=Math.min(1.4,zt*1.25)};$("zr").onclick=function(){zt=1;fx=0;G.rotation.y=0;G.rotation.x=.14;auto=!rm;sel("f3",0)};
+if($("zi")){$("zi").onclick=function(){zt=Math.max(.45,zt*.8)};$("zo").onclick=function(){zt=Math.min(1.4,zt*1.25)};$("zr").onclick=function(){zt=1;fx=0;G.rotation.y=0;G.rotation.x=.14;auto=!rm;sel("f3",0)}}
 var RC=new T.Raycaster(),mp=new T.Vector2();
 function pick(cx,cy){var r=cv.getBoundingClientRect();mp.set((cx-r.left)/r.width*2-1,-((cy-r.top)/r.height)*2+1);RC.setFromCamera(mp,cam);var h=RC.intersectObjects(L,true);if(!h.length)return -1;var o=h[0].object;while(o&&o.userData.i===undefined)o=o.parent;return o?o.userData.i:-1}
 var TX=["Idle and plugged in. Sharing status only.","In use. Nothing is shared.","Risk flagged: firewall is off. Paused until fixed."];
