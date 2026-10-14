@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nightshift Market Sandbox</title>
+<link rel="icon" href="/logo.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@500;600&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: Nightshift dashboard look. Sticky header with clock and tabs; each tab is one operator view. */
+:root {
+  --bg: #edf2f3; --surf: #fff; --ink: #14303a; --mut: #5b7480; --line: #d5dfe3;
+  --idle: #1f8a7d; --use: #b9c7ce; --sleep: #e3eaed; --amber: #c98a0b; --bad: #b4442f; --on: #fff;
+  --font: "Schibsted Grotesk", Arial, Helvetica, sans-serif; --mono: "Geist Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1d23; --surf: #152a32; --ink: #e4eef0; --mut: #8fa8b2; --line: #25404a;
+  --idle: #3cbfae; --use: #4a6672; --sleep: #1e343c; --amber: #e0a93a; --bad: #e27b67; --on: #0e1d23; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0e1d23; --surf: #152a32; --ink: #e4eef0; --mut: #8fa8b2; --line: #25404a;
+  --idle: #3cbfae; --use: #4a6672; --sleep: #1e343c; --amber: #e0a93a; --bad: #e27b67; --on: #0e1d23; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--font); }
+a { color: var(--idle); }
+.top { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.top .in, main { max-width: 1280px; margin: 0 auto; padding-inline: 16px; }
+.bar1 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 20px; padding-block: 12px 8px; }
+.brand { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.brand img { width: 30px; height: 30px; }
+.brand b { font-size: 18px; letter-spacing: -.01em; }
+.badge { font: 600 11px/1.7 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--amber);
+  border: 1px solid var(--amber); border-radius: 999px; padding: 0 8px; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.clock { font: 600 18px/1 var(--mono); font-variant-numeric: tabular-nums; }
+.clock small { font: 500 12px var(--font); color: var(--mut); margin-left: 6px; }
+nav { display: flex; gap: 2px; overflow-x: auto; }
+nav button { border: 0; background: none; border-bottom: 2px solid transparent; border-radius: 0; padding: 8px 12px; color: var(--mut); }
+nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--idle); }
+button, select, input { font: 500 13px var(--font); color: var(--ink); background: var(--surf); border: 1px solid var(--line);
+  border-radius: 8px; padding: 7px 11px; }
+button { cursor: pointer; transition: transform .12s; }
+button:hover { border-color: var(--idle); }
+button:active { transform: scale(.97); }
+button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); font-weight: 600; }
+button.chipbtn[aria-pressed="true"] { border-color: var(--idle); color: var(--idle); font-weight: 600; }
+:focus-visible { outline: 2px solid var(--idle); outline-offset: 2px; }
+main { padding-block: 16px 56px; }
+section[role="tabpanel"] { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+section[role="tabpanel"] > * { min-width: 0; }
+[hidden] { display: none !important; }
+h2 { margin: 0 0 10px; font-size: 15px; font-weight: 700; }
+h3 { margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--mut); }
+p { margin: 0; }
+.mut { color: var(--mut); }
+.small { font-size: 12px; }
+.card { background: var(--surf); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 16px; align-items: start; }
+.cols > * { min-width: 0; }
+.wide { grid-column: 1 / -1; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(160px, 45%), 1fr)); gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.kpi { background: var(--surf); padding: 14px 16px; }
+.kpi b { display: block; font: 600 21px/1.25 var(--mono); font-variant-numeric: tabular-nums; }
+.kpi span { color: var(--mut); font-size: 12px; }
+.kpi.hero b { color: var(--idle); }
+.kpi.neg b { color: var(--bad); }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart text { fill: var(--mut); font: 11px var(--mono); }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--mut); margin-top: 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.orders { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, 45%), 1fr)); gap: 12px; }
+.order { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 6px; align-content: start; }
+.order canvas, .order .gpu { width: 100%; aspect-ratio: 1; border-radius: 6px; background: #0b1a20; display: block; }
+.order .gpu { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 10px; }
+.order .gpu i { border-radius: 3px; background: #1e343c; } .order .gpu i.on { background: #3cbfae; }
+.order .who { font-weight: 600; }
+.row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; font-size: 12px; color: var(--mut); }
+.prog { height: 4px; background: var(--sleep); border-radius: 2px; overflow: hidden; }
+.prog i { display: block; height: 100%; background: var(--idle); }
+.pill { font: 600 11px/1.7 var(--mono); text-transform: uppercase; letter-spacing: .03em; padding: 0 7px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--mut); white-space: nowrap; }
+.pill.good, .pill.idle, .pill.working, .pill.active, .pill.delivered { color: var(--idle); border-color: var(--idle); }
+.pill.working { background: color-mix(in srgb, var(--idle) 14%, transparent); }
+.pill.warn, .pill.in_use, .pill.battery, .pill.late, .pill.overdue { color: var(--amber); border-color: var(--amber); }
+.pill.bad, .pill.suspended, .pill.left { color: var(--bad); border-color: var(--bad); }
+.tbl { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--mut); }
+.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+tr.mine td { background: color-mix(in srgb, var(--idle) 9%, transparent); }
+td.neg { color: var(--bad); }
+.sat { display: inline-block; width: 60px; height: 6px; background: var(--sleep); border-radius: 3px; vertical-align: middle; overflow: hidden; }
+.sat i { display: block; height: 100%; background: var(--idle); }
+.log { list-style: none; margin: 0; padding: 0; max-height: 360px; overflow-y: auto; }
+.log li { display: grid; grid-template-columns: 104px 1fr; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.log time { font: 500 12px var(--mono); color: var(--mut); }
+.log .ev-good { color: var(--idle); } .log .ev-warn { color: var(--amber); } .log .ev-bad { color: var(--bad); font-weight: 600; }
+.sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px 24px; }
+.slider label { display: flex; justify-content: space-between; font-weight: 600; font-size: 13px; }
+.slider output { font: 600 13px var(--mono); color: var(--idle); }
+.slider input { width: 100%; padding: 0; accent-color: var(--idle); border: 0; background: none; }
+.slider p { font-size: 12px; color: var(--mut); }
+.scen { display: flex; flex-wrap: wrap; gap: 8px; }
+.form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: end; }
+.form label { display: grid; gap: 4px; font-size: 12px; font-weight: 600; color: var(--mut); }
+.form input, .form select { width: 100%; }
+.quote { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-top: 14px;
+  padding: 12px; border-radius: 8px; background: var(--bg); }
+.quote b { display: block; font: 600 18px var(--mono); }
+.quote span { font-size: 12px; color: var(--mut); }
+.note { font-size: 13px; margin-top: 8px; min-height: 1.4em; }
+.note.warn { color: var(--amber); } .note.good { color: var(--idle); }
+.stmt { display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; font-size: 14px; }
+.stmt .num { font-size: 14px; }
+.stmt .total { font-weight: 700; border-top: 1px solid var(--line); padding-top: 6px; }
+.links { display: flex; flex-wrap: wrap; gap: 8px; }
+.links a { text-decoration: none; border: 1px solid var(--line); border-radius: 8px; padding: 7px 11px; color: var(--ink); font-size: 13px; }
+.links a:hover { border-color: var(--idle); }
+.empty { color: var(--mut); padding: 16px 0; text-align: center; }
+.toggle { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--idle); }
+@media print {
+  .top, .noprint { display: none !important; }
+  section[role="tabpanel"] { display: none !important; }
+  #tab-report { display: grid !important; }
+  body { background: #fff; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="in">
+    <div class="bar1">
+      <div class="brand"><img src="/logo.svg" alt=""><b>Nightshift Market Sandbox</b><span class="badge">Sandbox · fictional buyers</span></div>
+      <div class="controls">
+        <span class="clock" id="clock" aria-live="off">…</span>
+        <button id="pause" type="button">Pause</button>
+        <label class="mut small" for="speed">Speed</label>
+        <select id="speed">
+          <option value="0.5">1 day in 48 min</option>
+          <option value="2" selected>1 day in 12 min</option>
+          <option value="8">1 day in 3 min</option>
+          <option value="24">1 day in 1 min</option>
+        </select>
+        <button id="reset" type="button">Reset</button>
+      </div>
+    </div>
+    <nav role="tablist" aria-label="Views">
+      <button role="tab" data-tab="overview">Overview</button>
+      <button role="tab" data-tab="market">Market</button>
+      <button role="tab" data-tab="buyers">Buyers</button>
+      <button role="tab" data-tab="contributors">Contributors</button>
+      <button role="tab" data-tab="trust">Trust &amp; safety</button>
+      <button role="tab" data-tab="report">Report</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ============================== Overview -->
+  <section role="tabpanel" id="tab-overview">
+    <div class="kpis">
+      <div class="kpi"><b id="k-revenue">S$0</b><span>Buyers paid (after refunds)</span></div>
+      <div class="kpi"><b id="k-payouts">S$0</b><span>Paid to contributors</span></div>
+      <div class="kpi"><b id="k-elec">S$0</b><span>Contributors' electricity</span></div>
+      <div class="kpi hero" id="k-profit-box"><b id="k-profit">S$0</b><span id="k-margin">Nightshift profit</span></div>
+      <div class="kpi"><b id="k-month">S$0</b><span>Profit per month at this pace</span></div>
+      <div class="kpi"><b id="k-surge">×1.00</b><span id="k-surge-sub">GPU surge price</span></div>
+    </div>
+    <div class="cols">
+      <div class="card chart"><h2>Fleet availability</h2><div id="ch-fleet"></div>
+        <div class="legend"><span><i style="background:var(--idle)"></i>Working</span><span><i style="background:color-mix(in srgb,var(--idle) 35%,var(--surf))"></i>Idle, waiting</span><span><i style="background:var(--use)"></i>In use</span><span><i style="background:var(--sleep);outline:1px solid var(--line)"></i>Asleep or off</span></div></div>
+      <div class="card chart"><h2>Money so far</h2><div id="ch-money"></div>
+        <div class="legend"><span><i style="background:var(--ink)"></i>Buyers paid</span><span><i style="background:var(--mut)"></i>Paid to contributors</span><span><i style="background:var(--idle)"></i>Nightshift profit</span></div></div>
+    </div>
+    <div class="card"><h2>Latest orders</h2><div class="orders" id="orders"><p class="empty">Waiting for the first order…</p></div></div>
+    <div class="card"><h2>Activity</h2><ul class="log" id="log"></ul></div>
+  </section>
+
+  <!-- ============================== Market -->
+  <section role="tabpanel" id="tab-market" hidden>
+    <div class="card"><h2>Scenarios</h2><p class="mut small" style="margin-bottom:10px">Each scenario resets the assumptions to defaults, then applies its change. The clock keeps running.</p>
+      <div class="scen" id="scenarios"></div></div>
+    <div class="card"><h2>Assumptions</h2><div class="sliders" id="sliders"></div></div>
+    <div class="cols">
+      <div class="card"><h2>Fleet</h2>
+        <div class="form">
+          <label for="f-laptop">Laptops<input id="f-laptop" type="number" min="0" max="2000"></label>
+          <label for="f-desktop">Office desktops<input id="f-desktop" type="number" min="0" max="2000"></label>
+          <label for="f-gaming">Gaming PCs<input id="f-gaming" type="number" min="0" max="2000"></label>
+          <button type="button" id="f-apply" class="primary">Apply fleet</button>
+        </div>
+        <p class="mut small" style="margin-top:10px">Changing the fleet replaces the simulated devices. Real and live devices stay.</p>
+        <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+        <label class="toggle" for="f-live"><input type="checkbox" id="f-live"> Mirror my live Nightshift devices</label>
+        <p class="mut small">Reads the idle state of devices enrolled on your dashboard every 30 seconds, read-only. Their sandbox work is modelled; nothing runs on them.</p>
+      </div>
+      <div class="card"><h2>Economics by device type</h2>
+        <div class="tbl"><table><thead><tr><th>Type</th><th class="num">Devices</th><th class="num">Contributor net / month</th><th class="num">Nightshift fee / month</th></tr></thead><tbody id="classes"></tbody></table></div>
+        <p class="mut small" style="margin-top:8px">Per device, after electricity, at the current pace.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== Buyers -->
+  <section role="tabpanel" id="tab-buyers" hidden>
+    <div class="card"><h2>Buyer portal</h2><p class="mut small" style="margin-bottom:12px">Get a quote and place an order as a buyer. Prices and delivery estimates come from the live market.</p>
+      <div class="form">
+        <label for="q-buyer">Company<input id="q-buyer" value="Demo Buyer Pte Ltd" maxlength="60"></label>
+        <label for="q-kind">Workload<select id="q-kind"><option value="cpu">CPU batch (render, simulation)</option><option value="gpu">GPU inference</option></select></label>
+        <label for="q-hours"><span id="q-hours-label">Core-hours</span><input id="q-hours" type="number" min="0.25" max="500" step="0.25" value="12"></label>
+        <label for="q-deadline">Needed within (hours)<input id="q-deadline" type="number" min="1" max="72" value="8"></label>
+        <button type="button" id="q-place" class="primary">Place order</button>
+      </div>
+      <div class="quote" id="quote"></div>
+      <p class="note" id="q-note" aria-live="polite"></p>
+    </div>
+    <div class="card"><h2>Buyers</h2><div class="tbl"><table>
+      <thead><tr><th>Buyer</th><th>Wants</th><th>Status</th><th>Satisfaction</th><th class="num">Orders</th><th class="num">On time</th><th class="num">Refunds</th><th class="num">Spent</th><th></th></tr></thead>
+      <tbody id="buyer-rows"></tbody></table></div></div>
+    <div class="card"><div class="row" style="align-items:center;margin-bottom:10px"><h2 style="margin:0">Invoices</h2>
+      <span class="links"><select id="inv-filter" aria-label="Filter invoices by buyer"><option value="">All buyers</option></select><a href="/export/invoices.csv">Export CSV</a></span></div>
+      <div class="tbl"><table><thead><tr><th>Order</th><th>Buyer</th><th>Placed</th><th>Delivered</th><th class="num">Hours</th><th class="num">Unit price</th><th class="num">Price</th><th class="num">Refund</th><th class="num">Net</th><th>Status</th></tr></thead>
+      <tbody id="invoices"></tbody></table></div></div>
+  </section>
+
+  <!-- ============================== Contributors -->
+  <section role="tabpanel" id="tab-contributors" hidden>
+    <div class="cols">
+      <div class="card"><h2>Payout statement</h2>
+        <label class="mut small" for="st-device">Device</label>
+        <select id="st-device" style="width:100%;margin:4px 0 14px"></select>
+        <div id="statement"><p class="empty">Choose a device.</p></div></div>
+      <div class="card"><div class="row" style="align-items:center;margin-bottom:10px"><h2 style="margin:0">Top earners</h2><span class="links"><a href="/export/payouts.csv">Export payouts CSV</a></span></div>
+        <div class="tbl"><table><thead><tr><th>Device</th><th>State</th><th class="num">Tasks</th><th class="num">Payout</th><th class="num">Net / month</th><th class="num">Score</th></tr></thead><tbody id="devices"></tbody></table></div></div>
+    </div>
+  </section>
+
+  <!-- ============================== Trust -->
+  <section role="tabpanel" id="tab-trust" hidden>
+    <div class="kpis">
+      <div class="kpi"><b id="t-checks">0</b><span>Results rechecked</span></div>
+      <div class="kpi hero"><b id="t-caught">0</b><span>Cheating devices caught</span></div>
+      <div class="kpi" id="t-undetected-box"><b id="t-undetected">0</b><span>Bad results that got through</span></div>
+      <div class="kpi"><b id="t-cost">S$0</b><span>Cost of rechecking</span></div>
+      <div class="kpi"><b id="t-share">0%</b><span>Share of results rechecked</span></div>
+    </div>
+    <div class="cols">
+      <div class="card"><h2>How results are checked</h2>
+        <p>Every device's first results are rechecked by rerunning them on another idle device, then a random share after that. A wrong result suspends the device without pay and the task is rerun elsewhere. Rechecking more catches cheats sooner but costs more; try the <b>Lean verification</b> scenario to see bad results slip through.</p>
+        <p class="mut small" style="margin-top:8px">Reliability score: share of checks passed, weighted by how often the device finishes tasks without being interrupted.</p></div>
+      <div class="card"><h2>Suspended devices</h2><div class="tbl"><table><thead><tr><th>Device</th><th class="num">Tasks</th><th class="num">Checks</th><th class="num">Passed</th></tr></thead><tbody id="suspended"></tbody></table></div></div>
+      <div class="card wide"><h2>Least reliable active devices</h2><div class="tbl"><table><thead><tr><th>Device</th><th>Type</th><th class="num">Score</th><th class="num">Finished</th><th class="num">Interrupted</th><th class="num">Checks passed</th></tr></thead><tbody id="unreliable"></tbody></table></div></div>
+    </div>
+  </section>
+
+  <!-- ============================== Report -->
+  <section role="tabpanel" id="tab-report" hidden>
+    <div class="card noprint"><h2>Save and export</h2>
+      <div class="form">
+        <label for="r-label">Run name<input id="r-label" placeholder="e.g. 200 devices, premium GPU" maxlength="80"></label>
+        <button type="button" id="r-save" class="primary">Save this run</button>
+        <button type="button" id="r-print">Print or save as PDF</button>
+      </div>
+      <p class="note" id="r-note" aria-live="polite"></p>
+      <div class="links" style="margin-top:6px"><a href="/export/summary.json">Run summary (JSON)</a><a href="/export/invoices.csv">Invoices (CSV)</a><a href="/export/payouts.csv">Payouts (CSV)</a><a href="/export/timeseries.csv">Time series (CSV)</a></div>
+    </div>
+    <div class="card" id="report-body"></div>
+    <div class="card"><h2>Saved runs</h2><div class="tbl"><table><thead><tr><th>Run</th><th>Saved</th><th class="num">Sim days</th><th class="num">Devices</th><th class="num">Buyers paid</th><th class="num">Profit</th><th class="num">Margin</th><th class="num">Profit / month</th><th class="num">Late refunds</th></tr></thead><tbody id="runs"></tbody></table></div></div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const sgd = (v, d = 2) => (Number((v || 0).toFixed(d)) < 0 ? "−" : "") + "S$" + Math.abs(v || 0).toFixed(d);
+const pct = (v, d = 0) => `${((v || 0) * 100).toFixed(d)}%`;
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+let S = null, tab = "overview", selDevice = null;
+const drawn = new Map();
+
+async function api(path, body) {
+  const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
+  return r.json();
+}
+const control = (body) => api("/api/control", body).then(refresh);
+
+// ---------------------------------------------------------------- tabs
+function showTab(name) {
+  tab = name;
+  document.querySelectorAll("nav [role=tab]").forEach((b) => b.setAttribute("aria-selected", b.dataset.tab === name));
+  document.querySelectorAll("[role=tabpanel]").forEach((p) => (p.hidden = p.id !== `tab-${name}`));
+  try { history.replaceState(null, "", `#${name}`); } catch {}
+  refresh();
+}
+document.querySelectorAll("nav [role=tab]").forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
+
+// ---------------------------------------------------------------- charts
+function chart(el, series, layers, { stacked = false, money = false } = {}) {
+  const W = 640, H = 200, L = 52, R = 10, T = 10, B = 24;
+  if (series.length < 2) { el.innerHTML = `<p class="empty">Collecting data…</p>`; return; }
+  const xs = series.map((p) => p.t), x0 = xs[0], x1 = xs[xs.length - 1] || 1;
+  const tops = series.map((p) => stacked ? layers.reduce((s, l) => s + p[l.key], 0) : Math.max(...layers.map((l) => p[l.key])));
+  const mins = series.map((p) => Math.min(0, ...layers.map((l) => p[l.key])));
+  let ymax = Math.max(...tops, money ? 0.01 : 1), ymin = Math.min(...mins);
+  const X = (t) => L + (W - L - R) * (t - x0) / Math.max(x1 - x0, 1e-9);
+  const Y = (v) => T + (H - T - B) * (1 - (v - ymin) / Math.max(ymax - ymin, 1e-9));
+  let out = "";
+  for (let i = 0; i <= 3; i++) {
+    const v = ymin + (ymax - ymin) * i / 3, y = Y(v);
+    out += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="${css("--line")}"/>` +
+      `<text x="${L - 6}" y="${y + 4}" text-anchor="end">${money ? sgd(v, ymax < 1 ? 2 : 0) : Math.round(v)}</text>`;
+  }
+  const ticks = 4;
+  for (let i = 0; i <= ticks; i++) {
+    const p = series[Math.round((series.length - 1) * i / ticks)];
+    out += `<text x="${X(p.t)}" y="${H - 6}" text-anchor="${i === 0 ? "start" : i === ticks ? "end" : "middle"}">${esc(p.label.replace("Day ", "D").replace(",", ""))}</text>`;
+  }
+  if (stacked) {
+    const base = series.map(() => 0);
+    layers.forEach((l) => {
+      const upper = series.map((p, i) => base[i] + p[l.key]);
+      const pts = series.map((p, i) => `${X(p.t)},${Y(upper[i])}`).join(" ");
+      const back = series.map((p, i) => `${X(p.t)},${Y(base[i])}`).reverse().join(" ");
+      out += `<polygon points="${pts} ${back}" fill="${l.color}"/>`;
+      upper.forEach((v, i) => (base[i] = v));
+    });
+  } else {
+    layers.forEach((l) => {
+      const pts = series.map((p) => `${X(p.t)},${Y(p[l.key])}`).join(" ");
+      out += `<polyline points="${pts}" fill="none" stroke="${l.color}" stroke-width="2"/>`;
+      const last = series[series.length - 1];
+      out += `<circle cx="${X(last.t)}" cy="${Y(last[l.key])}" r="3" fill="${l.color}"/>`;
+    });
+  }
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Chart">${out}</svg>`;
+}
+
+// ---------------------------------------------------------------- previews
+const lut = [];
+function palette(i, max) {
+  if (i >= max) return [10, 24, 30];
+  const t = Math.pow(i / max, 0.5), h = 200 - 155 * t, l = 14 + 70 * t;
+  const a = 0.55 * Math.min(l, 100 - l) / 100;
+  const f = (n) => { const k = (n + h / 30) % 12; return Math.round(255 * (l / 100 - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))); };
+  return [f(0), f(8), f(4)];
+}
+async function drawPreview(o, canvas) {
+  if (drawn.get(o.id) === o.version) return;
+  drawn.set(o.id, o.version);
+  const res = await api(`/api/orders/${o.id}/image`);
+  if (!res.data) return;
+  if (!lut.length) for (let i = 0; i <= res.max; i++) lut.push(palette(i, res.max));
+  const bytes = Uint8Array.from(atob(res.data), (c) => c.charCodeAt(0));
+  const ctx = canvas.getContext("2d"), img = ctx.createImageData(res.size, res.size);
+  for (let p = 0; p < bytes.length; p++) {
+    const c = bytes[p] === 0 ? [30, 52, 60] : lut[bytes[p]];
+    img.data[p * 4] = c[0]; img.data[p * 4 + 1] = c[1]; img.data[p * 4 + 2] = c[2]; img.data[p * 4 + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+function statusPill(o) {
+  const s = o.overdue ? "overdue" : o.status;
+  return `<span class="pill ${s}">${s}</span>`;
+}
+
+// ---------------------------------------------------------------- renderers
+function renderHeader(s) {
+  const night = s.hour >= 22 || s.hour < 7;
+  $("clock").innerHTML = `${esc(s.clock)}<small>${night ? "night" : "day"}${s.paused ? " · paused" : ""}</small>`;
+  $("pause").textContent = s.paused ? "Resume" : "Pause";
+}
+
+function renderOverview(s) {
+  const k = s.kpi;
+  $("k-revenue").textContent = sgd(k.revenue);
+  $("k-payouts").textContent = sgd(k.payouts);
+  $("k-elec").textContent = sgd(k.electricity);
+  $("k-profit").textContent = sgd(k.profit);
+  $("k-profit-box").className = `kpi ${k.profit < 0 ? "neg" : "hero"}`;
+  $("k-margin").textContent = `Nightshift profit · ${pct(k.margin)} margin`;
+  $("k-month").textContent = sgd(k.profit_per_month, 0);
+  $("k-surge").textContent = `×${k.surge.toFixed(2)}`;
+  $("k-surge-sub").textContent = `GPU surge price · ${k.backlog_gpu.toFixed(1)} GPU-h waiting`;
+  const idleColor = `color-mix(in srgb, ${css("--idle")} 35%, ${css("--surf")})`;
+  chart($("ch-fleet"), s.series, [
+    { key: "working", color: css("--idle") }, { key: "idle", color: idleColor },
+    { key: "in_use", color: css("--use") }, { key: "asleep", color: css("--sleep") }], { stacked: true });
+  chart($("ch-money"), s.series, [
+    { key: "revenue", color: css("--ink") }, { key: "payouts", color: css("--mut") }, { key: "profit", color: css("--idle") }], { money: true });
+
+  const box = $("orders");
+  if (s.orders.length && box.querySelector(".empty")) box.innerHTML = "";
+  const keep = new Set(s.orders.map((o) => o.id));
+  box.querySelectorAll(".order").forEach((el) => { if (!keep.has(el.dataset.id)) { el.remove(); drawn.delete(el.dataset.id); } });
+  s.orders.forEach((o, i) => {
+    let el = box.querySelector(`.order[data-id="${o.id}"]`);
+    if (!el) {
+      el = document.createElement("div");
+      el.className = "order"; el.dataset.id = o.id;
+      el.innerHTML = (o.kind === "cpu" ? `<canvas width="256" height="256" aria-label="Result preview"></canvas>`
+        : `<div class="gpu" aria-label="GPU batch progress">${"<i></i>".repeat(Math.min(o.total, 16))}</div>`) +
+        `<div class="who"></div><div class="row a"></div><div class="prog"><i></i></div><div class="row b"></div>`;
+      drawn.delete(o.id);
+    }
+    if (box.children[i] !== el) box.insertBefore(el, box.children[i] || null);
+    el.querySelector(".who").textContent = o.buyer;
+    el.querySelector(".a").innerHTML = `<span>${o.hours} ${o.kind === "cpu" ? "core-h" : "GPU-h"}${o.surge > 1 ? ` · ×${o.surge}` : ""}</span><span>${sgd(o.price, 3)}</span>`;
+    el.querySelector(".prog i").style.width = `${(100 * o.done / o.total).toFixed(0)}%`;
+    el.querySelector(".b").innerHTML = `<span>${o.done}/${o.total} · due ${esc(o.due.split(", ")[1])}</span>${statusPill(o)}`;
+    if (o.kind === "cpu") drawPreview(o, el.querySelector("canvas"));
+    else el.querySelectorAll(".gpu i").forEach((c, j) => c.classList.toggle("on", j < Math.round(Math.min(o.total, 16) * o.done / o.total)));
+  });
+  $("log").innerHTML = s.events.map((e) => `<li><time>${esc(e.t)}</time><span class="ev-${e.kind}">${esc(e.msg)}</span></li>`).join("");
+}
+
+const SLIDERS = [
+  ["take_rate", "Nightshift's cut", 0, 0.6, 0.01, pct, "Share of what buyers pay that Nightshift keeps."],
+  ["cpu_price", "CPU price", 0.005, 0.06, 0.001, (v) => `S$${v.toFixed(3)}/core-h`, "Cloud spot CPU is roughly S$0.01–0.03."],
+  ["gpu_price", "GPU price", 0.1, 1, 0.01, (v) => `S$${v.toFixed(2)}/GPU-h`, "Consumer GPU marketplaces are roughly S$0.30–0.70."],
+  ["surge_max", "GPU surge cap", 1, 3, 0.1, (v) => `×${v.toFixed(1)}`, "How far GPU prices can rise when GPUs are scarce."],
+  ["electricity", "Electricity rate", 0.1, 0.6, 0.01, (v) => `S$${v.toFixed(2)}/kWh`, "Paid by contributors."],
+  ["verify_share", "Results rechecked", 0, 0.3, 0.01, pct, "Rerun on another device at the contributor rate, after each device's first results."],
+  ["verify_first_n", "Always check first", 0, 10, 1, (v) => `${v} results`, "Per new device."],
+  ["late_refund", "Late-delivery refund", 0, 1, 0.05, pct, "Paid by Nightshift when an order misses its deadline."],
+  ["demand", "Buyer demand", 0.2, 3, 0.1, (v) => `×${v.toFixed(1)}`, "Scales how often buyers order."],
+  ["cheater_share", "Cheating devices", 0, 0.3, 0.01, pct, "Share of simulated devices returning bad results. Changing it rebuilds the fleet."],
+];
+let sliderTimer = null, sliderBusy = 0;
+function buildMarket() {
+  $("sliders").innerHTML = SLIDERS.map(([key, label, min, max, step, , hint]) => `<div class="slider">
+    <label for="s-${key}">${label}<output id="o-${key}"></output></label>
+    <input type="range" id="s-${key}" data-key="${key}" min="${min}" max="${max}" step="${step}">
+    <p>${hint}</p></div>`).join("");
+  $("sliders").addEventListener("input", (e) => {
+    const key = e.target.dataset.key; if (!key) return;
+    const fmt = SLIDERS.find((s) => s[0] === key)[5];
+    $(`o-${key}`).textContent = fmt(Number(e.target.value));
+    sliderBusy = Date.now();
+    clearTimeout(sliderTimer);
+    sliderTimer = setTimeout(() => control({ action: "config", values: { [key]: Number(e.target.value) } }), 250);
+  });
+}
+function renderMarket(s) {
+  $("scenarios").innerHTML = Object.entries(s.scenarios).map(([k, v]) =>
+    `<button type="button" class="chipbtn" data-scenario="${k}" aria-pressed="${s.scenario === k}">${esc(v)}</button>`).join("");
+  if (Date.now() - sliderBusy > 1500) SLIDERS.forEach(([key, , , , , fmt]) => {
+    const input = $(`s-${key}`); if (document.activeElement === input) return;
+    input.value = s.cfg[key]; $(`o-${key}`).textContent = fmt(Number(s.cfg[key]));
+  });
+  ["laptop", "desktop", "gaming"].forEach((c) => { const el = $(`f-${c}`); if (document.activeElement !== el && !el.dataset.dirty) el.value = s.cfg.fleet[c]; });
+  $("f-live").checked = s.cfg.live_fleet;
+  $("classes").innerHTML = Object.values(s.classes).map((c) => `<tr><td>${esc(c.label)}</td><td class="num">${c.count}</td>
+    <td class="num ${c.net_per_month < 0 ? "neg" : ""}">${sgd(c.net_per_month)}</td><td class="num">${sgd(c.fees_per_month)}</td></tr>`).join("")
+    || `<tr><td colspan="4" class="empty">No simulated devices.</td></tr>`;
+}
+
+let quoteTimer = null;
+async function updateQuote() {
+  const kind = $("q-kind").value, hours = Number($("q-hours").value), deadline = Number($("q-deadline").value);
+  $("q-hours-label").textContent = kind === "cpu" ? "Core-hours" : "GPU-hours";
+  if (!(hours > 0)) { $("quote").innerHTML = ""; return; }
+  const q = await api(`/api/quote?kind=${kind}&hours=${hours}`);
+  const eta = q.eta_hours === null ? "No capacity now" : q.eta_hours < 1 ? `${Math.round(q.eta_hours * 60)} min` : `${q.eta_hours.toFixed(1)} h`;
+  $("quote").innerHTML = `<div><b>${sgd(q.price, 3)}</b><span>Total price</span></div>
+    <div><b>${sgd(q.unit_price, 3)}</b><span>Per ${kind === "cpu" ? "core" : "GPU"}-hour${q.surge > 1 ? ` (surge ×${q.surge})` : ""}</span></div>
+    <div><b>${eta}</b><span>Estimated delivery at current capacity</span></div>`;
+  const note = $("q-note");
+  if (q.eta_hours === null || q.eta_hours > deadline) { note.className = "note warn"; note.textContent = "Likely to miss this deadline at current capacity. Late orders get a partial refund."; }
+  else { note.className = "note"; note.textContent = ""; }
+}
+["q-kind", "q-hours", "q-deadline"].forEach((id) => $(id).addEventListener("input", () => { clearTimeout(quoteTimer); quoteTimer = setTimeout(updateQuote, 200); }));
+
+async function renderBuyers(s) {
+  $("buyer-rows").innerHTML = s.buyers.map((b) => `<tr class="${b.manual ? "mine" : ""}">
+    <td>${esc(b.name)}</td><td>${esc(b.what)}</td><td><span class="pill ${b.status}">${b.status}</span></td>
+    <td><span class="sat"><i style="width:${(b.satisfaction * 100).toFixed(0)}%"></i></span></td>
+    <td class="num">${b.orders}</td><td class="num">${b.delivered - b.late}/${b.delivered}</td>
+    <td class="num">${sgd(b.refunds, 3)}</td><td class="num">${sgd(b.spent, 3)}</td>
+    <td>${b.manual ? "" : `<button type="button" data-order="${esc(b.name)}">Order now</button>`}</td></tr>`).join("");
+  const f = $("inv-filter"), current = f.value;
+  const names = s.buyers.map((b) => b.name);
+  if (f.options.length - 1 !== names.length) f.innerHTML = `<option value="">All buyers</option>` + names.map((n) => `<option>${esc(n)}</option>`).join("");
+  f.value = current;
+  const rows = await api(`/api/invoices${current ? `?buyer=${encodeURIComponent(current)}` : ""}`);
+  $("invoices").innerHTML = rows.slice(0, 60).map((o) => `<tr><td>${o.id}</td><td>${esc(o.buyer)}</td><td>${esc(o.created)}</td>
+    <td>${esc(o.delivered || "—")}</td><td class="num">${o.hours}</td><td class="num">${sgd(o.unit_price, 3)}</td>
+    <td class="num">${sgd(o.price, 3)}</td><td class="num">${o.refund ? sgd(-o.refund, 3) : "—"}</td>
+    <td class="num">${sgd(o.price - o.refund, 3)}</td><td>${statusPill(o)}</td></tr>`).join("")
+    || `<tr><td colspan="10" class="empty">No orders yet.</td></tr>`;
+}
+
+async function renderContributors(s) {
+  const sel = $("st-device");
+  const all = await api("/api/devices");
+  if (sel.options.length !== all.length) {
+    const groups = { real: "This computer", live: "Live from your dashboard", sim: "Simulated" };
+    sel.innerHTML = Object.entries(groups).map(([kind, label]) => {
+      const opts = all.filter((d) => d.kind === kind);
+      return opts.length ? `<optgroup label="${label}">${opts.map((d) => `<option value="${d.id}">${esc(d.name)}</option>`).join("")}</optgroup>` : "";
+    }).join("");
+    if (selDevice && all.some((d) => d.id === selDevice)) sel.value = selDevice;
+  }
+  selDevice = sel.value;
+  if (selDevice) {
+    const st = await api(`/api/statement?device=${selDevice}`);
+    if (!st.error) $("statement").innerHTML = `
+      <p style="margin-bottom:10px"><b>${esc(st.name)}</b> <span class="pill ${st.state}">${st.state.replace("_", " ")}</span><br>
+      <span class="mut small">${esc(st.label)} · ${st.cores} cores · ~${st.watts} W under load · joined ${esc(st.joined)}</span></p>
+      <div class="stmt">
+        <span>Tasks finished</span><span class="num">${st.done}</span>
+        <span>Hours worked</span><span class="num">${st.hours.toFixed(2)} h</span>
+        <span>Buyers paid for this device's work</span><span class="num">${sgd(st.gross, 3)}</span>
+        <span>Nightshift fee (${pct(st.take_rate)})</span><span class="num">${sgd(-st.fees, 3)}</span>
+        <span>Payout</span><span class="num">${sgd(st.earned, 3)}</span>
+        <span>Electricity (S$${st.electricity_rate}/kWh)</span><span class="num">${sgd(-st.electricity, 3)}</span>
+        <span class="total">Net to contributor</span><span class="num total ${st.net < 0 ? "neg" : ""}">${sgd(st.net, 3)}</span>
+        <span class="mut">Projected per month</span><span class="num mut">${sgd(st.net_per_month)}</span>
+        <span class="mut">Reliability score</span><span class="num mut">${st.reliability}/100</span>
+        <span class="mut">Checks passed</span><span class="num mut">${st.passed}/${st.checked}</span>
+      </div>`;
+  }
+  $("devices").innerHTML = s.devices.slice(0, 25).map((d) => `<tr class="${d.kind !== "sim" ? "mine" : ""}"><td>${esc(d.name)}</td>
+    <td><span class="pill ${d.state}">${d.state.replace("_", " ")}</span></td><td class="num">${d.done}</td>
+    <td class="num">${sgd(d.earned, 3)}</td><td class="num ${d.net_per_month < 0 ? "neg" : ""}">${sgd(d.net_per_month)}</td>
+    <td class="num">${d.reliability}</td></tr>`).join("");
+}
+
+async function renderTrust(s) {
+  const t = s.trust;
+  $("t-checks").textContent = t.checks.toLocaleString();
+  $("t-caught").textContent = t.caught;
+  $("t-undetected").textContent = t.undetected;
+  $("t-undetected-box").className = `kpi ${t.undetected ? "neg" : ""}`;
+  $("t-cost").textContent = sgd(t.verify_cost);
+  $("t-share").textContent = pct(t.results ? t.checks / t.results : 0);
+  $("suspended").innerHTML = t.suspended.map((d) => `<tr><td>${esc(d.name)}</td><td class="num">${d.done}</td><td class="num">${d.checked}</td><td class="num">${d.passed}</td></tr>`).join("")
+    || `<tr><td colspan="4" class="empty">None yet.</td></tr>`;
+  const all = await api("/api/devices");
+  const active = all.filter((d) => d.state !== "suspended" && d.done + d.preempted > 0).sort((a, b) => a.reliability - b.reliability).slice(0, 10);
+  $("unreliable").innerHTML = active.map((d) => `<tr><td>${esc(d.name)}</td><td>${esc(d.label)}</td><td class="num">${d.reliability}</td>
+    <td class="num">${d.done}</td><td class="num">${d.preempted}</td><td class="num">${d.passed}/${d.checked}</td></tr>`).join("")
+    || `<tr><td colspan="6" class="empty">No devices have worked yet.</td></tr>`;
+}
+
+async function renderReport(s) {
+  const k = s.kpi, c = s.cfg;
+  $("report-body").innerHTML = `<h2>Nightshift market sandbox: run report</h2>
+    <p class="mut small" style="margin-bottom:12px">${esc(s.scenarios[s.scenario] || "Custom")} · ${s.elapsed_days.toFixed(1)} simulated days · ${k.devices} devices · fictional buyers, no real money</p>
+    <div class="kpis" style="margin-bottom:14px">
+      <div class="kpi"><b>${sgd(k.revenue)}</b><span>Buyers paid</span></div>
+      <div class="kpi"><b>${sgd(k.payouts)}</b><span>Paid to contributors</span></div>
+      <div class="kpi ${k.profit < 0 ? "neg" : "hero"}"><b>${sgd(k.profit)}</b><span>Nightshift profit (${pct(k.margin)})</span></div>
+      <div class="kpi"><b>${sgd(k.profit_per_month, 0)}</b><span>Profit per month</span></div>
+      <div class="kpi"><b>${sgd(k.profit_per_device_month)}</b><span>Profit per device per month</span></div></div>
+    <div class="cols">
+      <div><h3>Where the money went</h3><div class="stmt">
+        <span>Buyers paid (before refunds)</span><span class="num">${sgd(k.gross)}</span>
+        <span>Paid to contributors</span><span class="num">${sgd(-k.payouts)}</span>
+        <span>Late-delivery refunds</span><span class="num">${sgd(-k.refunds)}</span>
+        <span>Rechecking results</span><span class="num">${sgd(-k.verify_cost)}</span>
+        <span class="total">Nightshift profit</span><span class="num total">${sgd(k.profit)}</span></div></div>
+      <div><h3>Contributors by device type (net per month)</h3><div class="stmt">
+        ${Object.values(s.classes).map((x) => `<span>${esc(x.label)} (${x.count})</span><span class="num">${sgd(x.net_per_month)}</span>`).join("")}</div></div>
+      <div><h3>Work delivered</h3><div class="stmt">
+        <span>CPU core-hours</span><span class="num">${k.cpu_hours.toFixed(1)}</span>
+        <span>GPU-hours</span><span class="num">${k.gpu_hours.toFixed(1)}</span>
+        <span>Work lost to interruptions</span><span class="num">${k.lost_hours.toFixed(1)} h</span>
+        <span>Orders on time</span><span class="num">${s.buyers.reduce((a, b) => a + b.delivered - b.late, 0)}/${s.buyers.reduce((a, b) => a + b.delivered, 0)}</span>
+        <span>Cheats caught / slipped through</span><span class="num">${s.trust.caught} / ${s.trust.undetected}</span></div></div>
+      <div><h3>Assumptions</h3><div class="stmt">
+        <span>Nightshift's cut</span><span class="num">${pct(c.take_rate)}</span>
+        <span>CPU / GPU price</span><span class="num">S$${c.cpu_price}/core-h · S$${c.gpu_price}/GPU-h</span>
+        <span>GPU surge cap</span><span class="num">×${c.surge_max}</span>
+        <span>Electricity</span><span class="num">S$${c.electricity}/kWh</span>
+        <span>Results rechecked</span><span class="num">${pct(c.verify_share)} + first ${c.verify_first_n}</span>
+        <span>Late refund</span><span class="num">${pct(c.late_refund)}</span></div></div>
+    </div>
+    <div class="cols" style="margin-top:14px"><div class="chart"><h3>Fleet availability</h3><div id="rp-fleet"></div></div><div class="chart"><h3>Money so far</h3><div id="rp-money"></div></div></div>`;
+  const idleColor = `color-mix(in srgb, ${css("--idle")} 35%, ${css("--surf")})`;
+  chart($("rp-fleet"), s.series, [{ key: "working", color: css("--idle") }, { key: "idle", color: idleColor }, { key: "in_use", color: css("--use") }, { key: "asleep", color: css("--sleep") }], { stacked: true });
+  chart($("rp-money"), s.series, [{ key: "revenue", color: css("--ink") }, { key: "payouts", color: css("--mut") }, { key: "profit", color: css("--idle") }], { money: true });
+  const runs = await api("/api/runs");
+  $("runs").innerHTML = runs.map((r) => `<tr><td>${esc(r.label)}</td><td>${esc(r.saved_at.replace("T", " "))}</td><td class="num">${r.sim_days}</td>
+    <td class="num">${r.kpi.devices}</td><td class="num">${sgd(r.kpi.revenue)}</td><td class="num">${sgd(r.kpi.profit)}</td>
+    <td class="num">${pct(r.kpi.margin)}</td><td class="num">${sgd(r.kpi.profit_per_month, 0)}</td><td class="num">${sgd(r.kpi.refunds)}</td></tr>`).join("")
+    || `<tr><td colspan="9" class="empty">No saved runs yet. Save one above to compare scenarios.</td></tr>`;
+}
+
+// ---------------------------------------------------------------- loop
+let busy = false, slowTick = 0;
+async function refresh() {
+  if (busy) return; busy = true;
+  try {
+    S = await api("/api/state");
+    renderHeader(S);
+    const slow = Date.now() - slowTick > 3000;
+    if (tab === "overview") renderOverview(S);
+    else if (tab === "market") renderMarket(S);
+    else if (slow || tab === "report") {
+      slowTick = Date.now();
+      if (tab === "buyers") await renderBuyers(S);
+      if (tab === "contributors") await renderContributors(S);
+      if (tab === "trust") await renderTrust(S);
+      if (tab === "report" && true) await renderReport(S);
+    }
+  } catch { $("clock").textContent = "Sandbox stopped. Run: python marketplace.py"; }
+  busy = false;
+}
+setInterval(refresh, 1000);
+
+// ---------------------------------------------------------------- controls
+$("pause").addEventListener("click", () => control({ action: S && S.paused ? "resume" : "pause" }));
+$("speed").addEventListener("change", (e) => control({ action: "speed", value: Number(e.target.value) }));
+$("reset").addEventListener("click", () => { drawn.clear(); $("orders").innerHTML = ""; control({ action: "reset" }); });
+$("scenarios").addEventListener("click", (e) => { const b = e.target.closest("[data-scenario]"); if (b) { drawn.clear(); control({ action: "scenario", name: b.dataset.scenario }); } });
+["laptop", "desktop", "gaming"].forEach((c) => $(`f-${c}`).addEventListener("input", (e) => (e.target.dataset.dirty = "1")));
+$("f-apply").addEventListener("click", () => {
+  const fleet = {}; ["laptop", "desktop", "gaming"].forEach((c) => { fleet[c] = Number($(`f-${c}`).value) || 0; delete $(`f-${c}`).dataset.dirty; });
+  control({ action: "config", values: { fleet } });
+});
+$("f-live").addEventListener("change", (e) => control({ action: "config", values: { live_fleet: e.target.checked } }));
+$("buyer-rows").addEventListener("click", (e) => { const b = e.target.closest("[data-order]"); if (b) { slowTick = 0; control({ action: "order", buyer: b.dataset.order }); } });
+$("inv-filter").addEventListener("change", () => { slowTick = 0; refresh(); });
+$("st-device").addEventListener("change", (e) => { selDevice = e.target.value; slowTick = 0; refresh(); });
+$("q-place").addEventListener("click", async () => {
+  const res = await api("/api/control", { action: "order", buyer: $("q-buyer").value, kind: $("q-kind").value,
+    hours: Number($("q-hours").value), deadline_h: Number($("q-deadline").value) });
+  const note = $("q-note");
+  if (res.error) { note.className = "note warn"; note.textContent = res.error; return; }
+  note.className = "note good";
+  note.textContent = `Order ${res.order.id} placed for ${sgd(res.order.price, 3)}. Track it on the Overview tab and in Invoices below.`;
+  slowTick = 0; refresh();
+});
+$("r-save").addEventListener("click", async () => {
+  const res = await api("/api/runs/save", { label: $("r-label").value });
+  $("r-note").className = "note good"; $("r-note").textContent = `Saved as ${res.file}.`;
+  refresh();
+});
+$("r-print").addEventListener("click", () => window.print());
+
+buildMarket();
+updateQuote();
+const start = location.hash.slice(1);
+showTab(["overview", "market", "buyers", "contributors", "trust", "report"].includes(start) ? start : "overview");
+</script>
+</body>
+</html>
