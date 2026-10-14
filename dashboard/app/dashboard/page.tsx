@@ -12,9 +12,25 @@ import Kpi from "@/components/Kpi";
 import Reveal from "@/components/Reveal";
 import WeeklyTrendChart from "@/components/WeeklyTrendChart";
 import RealtimeDevices from "@/components/RealtimeDevices";
+import AddDevice, { type Download } from "@/components/AddDevice";
+import { existsSync } from "node:fs";
+import path from "node:path";
 
 const EARNING_RATE_PER_CORE_HOUR = 0.07; // S$, placeholder until the pilot provides measured data
 const IDLE_POWER_DRAW_KW = 0.08;
+// Agent builds live in public/downloads (built by .github/workflows/build-agent.yml).
+const AGENT_DOWNLOADS: Download[] = [
+  { label: "Windows", href: "/downloads/nightshift-agent-windows.exe", note: "Windows 10 or 11" },
+  { label: "Mac", href: "/downloads/nightshift-agent-macos.zip", note: "Apple silicon Macs. Intel Macs: use the Python script" },
+  { label: "Linux", href: "/downloads/nightshift-agent-linux", note: "x86-64 desktop Linux" },
+  { label: "Python script (any OS)", href: "/downloads/nightshift_agent.py", note: "Needs Python 3.9+" },
+];
+function availableDownloads() {
+  return AGENT_DOWNLOADS.filter((d) =>
+    existsSync(path.join(process.cwd(), "public", d.href))
+  );
+}
+
 const BTN = "transition-transform duration-150 hover:scale-[1.03] active:scale-[0.97]";
 
 export default async function DashboardPage() {
@@ -108,13 +124,14 @@ export default async function DashboardPage() {
         </Reveal>
       )}
 
+      <AddDevice downloads={availableDownloads()} />
+
       {!devices?.length ? (
         <Reveal className="card">
           <p className="mb-3 text-sm text-[var(--mut)]">
-            No devices yet — Phase 1 has no real desktop agent reporting in
-            yet.
+            No devices yet. Add one above to start measuring.
             {process.env.NODE_ENV !== "production" &&
-              " Load demo data to see the dashboard in action."}
+              " Or load demo data to see the dashboard in action."}
           </p>
           {process.env.NODE_ENV !== "production" && (
             <form action={seedDemoData}>

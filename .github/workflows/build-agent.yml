@@ -1,0 +1,69 @@
+# Builds the Nightshift agent for Windows, macOS and Linux, then commits the
+# builds to dashboard/public/downloads so the dashboard's download links work.
+# Runs when agent/ changes on main, or by hand from the Actions tab.
+name: Build agent
+
+on:
+  push:
+    branches: [main]
+    paths: ["agent/**", ".github/workflows/build-agent.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            file: nightshift-agent-windows.exe
+          - os: macos-latest # Apple silicon
+            file: nightshift-agent-macos.zip
+          - os: ubuntu-22.04 # older glibc, so the binary runs on more distros
+            file: nightshift-agent-linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyinstaller psutil
+      - name: Build
+        shell: bash
+        working-directory: agent
+        run: |
+          name="${{ matrix.file }}"; name="${name%.zip}"; name="${name%.exe}"
+          pyinstaller --onefile --console --name "$name" --hidden-import psutil nightshift_agent.py
+          ./dist/$name* --check
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            (cd dist && zip -q "../${{ matrix.file }}" "$name")
+          else
+            cp dist/${{ matrix.file }} .
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.file }}
+          path: agent/${{ matrix.file }}
+
+  publish:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: built
+          merge-multiple: true
+      - name: Commit builds
+        run: |
+          mkdir -p dashboard/public/downloads
+          cp built/* agent/nightshift_agent.py dashboard/public/downloads/
+          chmod +x dashboard/public/downloads/nightshift-agent-linux
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add dashboard/public/downloads
+          git diff --cached --quiet || git commit -m "Update agent downloads [skip ci]"
+          git push
