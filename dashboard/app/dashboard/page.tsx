@@ -11,6 +11,7 @@ import {
 import Kpi from "@/components/Kpi";
 import Reveal from "@/components/Reveal";
 import WeeklyTrendChart from "@/components/WeeklyTrendChart";
+import TimeView from "@/components/TimeView";
 import RealtimeDevices from "@/components/RealtimeDevices";
 import AddDevice, { type Download } from "@/components/AddDevice";
 import { existsSync } from "node:fs";
@@ -53,7 +54,7 @@ export default async function DashboardPage() {
     .slice(0, 10);
   const dayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
 
-  const [{ data: settings }, { data: summaries }, { data: sessions }] =
+  const [{ data: settings }, { data: summaries }, { data: sessions }, { data: allSummaries }] =
     deviceIds.length
       ? await Promise.all([
           supabase
@@ -72,8 +73,13 @@ export default async function DashboardPage() {
             // end_ts (not start_ts) so sessions that started before the
             // 24h window but are still ongoing within it are included.
             .or(`end_ts.gte.${dayAgo},end_ts.is.null`),
+          supabase
+            .from("daily_summary")
+            .select("device_id, date, usable_idle_hours, core_hours, uptime_hours")
+            .in("device_id", deviceIds)
+            .order("date"),
         ])
-      : [{ data: [] }, { data: [] }, { data: [] }];
+      : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }];
 
   const settingsByDevice = new Map(
     (settings ?? []).map((s) => [s.device_id, s])
@@ -216,6 +222,14 @@ export default async function DashboardPage() {
               </span>
             </div>
           </Reveal>
+
+          <TimeView
+            devices={devices.map((d) => ({ id: d.id, name: d.name, enrolled_at: d.enrolled_at }))}
+            summaries={allSummaries ?? []}
+            today={today}
+            hoursSoFarToday={new Date(dayAgo).getUTCHours() + new Date(dayAgo).getUTCMinutes() / 60}
+            ratePerCoreHour={EARNING_RATE_PER_CORE_HOUR}
+          />
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Reveal className="card">
