@@ -141,20 +141,30 @@ function Kpis({ items }: { items: { v: string; l: string; tone?: "good" | "bad" 
 
 const tooltipStyle = { background: "var(--surf)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12 };
 
+// SVG attributes can't read CSS variables, so charts use the theme's computed colours.
+function themeColors() {
+  const cs = getComputedStyle(document.documentElement);
+  const get = (name: string, fallback: string) => cs.getPropertyValue(name).trim() || fallback;
+  return { idle: get("--idle", "#1f8a7d"), use: get("--use", "#b9c7ce"), sleep: get("--sleep", "#e3eaed"),
+    ink: get("--ink", "#14303a"), mut: get("--mut", "#5b7480"), line: get("--line", "#d5dfe3") };
+}
+const moneyTick = (v: number, max: number) => `S$${v.toFixed(max < 1 ? 2 : max < 10 ? 1 : 0)}`;
+
 function FleetChart({ data }: { data: Snap["series"] }) {
   if (data.length < 2) return <p className="py-10 text-center text-sm text-[var(--mut)]">Collecting data…</p>;
+  const c = themeColors();
   return (
     <div className="h-[200px]">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
-          <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--mut)" }} tickLine={false} axisLine={{ stroke: "var(--line)" }} minTickGap={40} />
-          <YAxis tick={{ fontSize: 11, fill: "var(--mut)" }} tickLine={false} axisLine={false} allowDecimals={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={c.line} vertical={false} />
+          <XAxis dataKey="label" tick={{ fontSize: 11, fill: c.mut }} tickLine={false} axisLine={{ stroke: c.line }} minTickGap={40} />
+          <YAxis tick={{ fontSize: 11, fill: c.mut }} tickLine={false} axisLine={false} allowDecimals={false} />
           <Tooltip contentStyle={tooltipStyle} />
-          <Area type="stepAfter" dataKey="working" name="Working" stackId="f" stroke="none" fill="var(--idle)" fillOpacity={1} />
-          <Area type="stepAfter" dataKey="idle" name="Idle, waiting" stackId="f" stroke="none" fill="var(--idle)" fillOpacity={0.35} />
-          <Area type="stepAfter" dataKey="in_use" name="In use" stackId="f" stroke="none" fill="var(--use)" fillOpacity={1} />
-          <Area type="stepAfter" dataKey="asleep" name="Asleep or off" stackId="f" stroke="none" fill="var(--sleep)" fillOpacity={1} />
+          <Area type="stepAfter" dataKey="working" name="Working" stackId="f" stroke="none" fill={c.idle} fillOpacity={1} isAnimationActive={false} />
+          <Area type="stepAfter" dataKey="idle" name="Idle, waiting" stackId="f" stroke="none" fill={c.idle} fillOpacity={0.35} isAnimationActive={false} />
+          <Area type="stepAfter" dataKey="in_use" name="In use" stackId="f" stroke="none" fill={c.use} fillOpacity={1} isAnimationActive={false} />
+          <Area type="stepAfter" dataKey="asleep" name="Asleep or off" stackId="f" stroke="none" fill={c.sleep} fillOpacity={1} isAnimationActive={false} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
@@ -163,17 +173,19 @@ function FleetChart({ data }: { data: Snap["series"] }) {
 
 function MoneyChart({ data }: { data: Snap["series"] }) {
   if (data.length < 2) return <p className="py-10 text-center text-sm text-[var(--mut)]">Collecting data…</p>;
+  const c = themeColors();
+  const max = Math.max(...data.map((p) => Number(p.revenue) || 0));
   return (
     <div className="h-[200px]">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
-          <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--mut)" }} tickLine={false} axisLine={{ stroke: "var(--line)" }} minTickGap={40} />
-          <YAxis tick={{ fontSize: 11, fill: "var(--mut)" }} tickLine={false} axisLine={false} tickFormatter={(v) => `S$${Number(v).toFixed(0)}`} />
+          <CartesianGrid strokeDasharray="3 3" stroke={c.line} vertical={false} />
+          <XAxis dataKey="label" tick={{ fontSize: 11, fill: c.mut }} tickLine={false} axisLine={{ stroke: c.line }} minTickGap={40} />
+          <YAxis tick={{ fontSize: 11, fill: c.mut }} tickLine={false} axisLine={false} tickFormatter={(v) => moneyTick(Number(v), max)} />
           <Tooltip contentStyle={tooltipStyle} formatter={(v) => sgd(Number(v))} />
-          <Line type="monotone" dataKey="revenue" name="Customers paid" stroke="var(--ink)" strokeWidth={2} dot={false} />
-          <Line type="monotone" dataKey="payouts" name="Paid to contributors" stroke="var(--mut)" strokeWidth={2} dot={false} />
-          <Line type="monotone" dataKey="profit" name="Nightshift profit" stroke="var(--idle)" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="revenue" name="Customers paid" stroke={c.ink} strokeWidth={2} dot={false} isAnimationActive={false} />
+          <Line type="monotone" dataKey="payouts" name="Paid to contributors" stroke={c.mut} strokeWidth={2} dot={false} isAnimationActive={false} />
+          <Line type="monotone" dataKey="profit" name="Nightshift profit" stroke={c.idle} strokeWidth={2} dot={false} isAnimationActive={false} />
         </LineChart>
       </ResponsiveContainer>
     </div>
