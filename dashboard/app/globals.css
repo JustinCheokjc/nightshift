@@ -13,6 +13,8 @@
   --amber: #c98a0b;
   --bad: #b4442f;
   --on: #fff;
+  --chart-avail: #0b917f;
+  --chart-pend: #b37800;
   --background: var(--bg);
   --foreground: var(--ink);
 }
@@ -37,6 +39,8 @@
     --amber: #e0a93a;
     --bad: #e27b67;
     --on: #0e1d23;
+    --chart-avail: #23a595;
+    --chart-pend: #c08712;
   }
 }
 
@@ -52,6 +56,8 @@
   --amber: #e0a93a;
   --bad: #e27b67;
   --on: #0e1d23;
+  --chart-avail: #23a595;
+  --chart-pend: #c08712;
 }
 
 body {
