@@ -18,6 +18,7 @@ export default async function DashboardLayout({
 
   const tabs = [
     { href: "/dashboard", label: "Devices" },
+    { href: "/dashboard/market", label: "Market" },
     { href: "/dashboard/wallet", label: "Wallet" },
     { href: "/dashboard/security", label: "Security" },
     { href: "/dashboard/settings", label: "Settings" },
