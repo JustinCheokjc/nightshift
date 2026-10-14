@@ -35,7 +35,7 @@ export default async function DashboardLayout({
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-4">
           <div>
             <h1 className="text-lg font-bold">
-              <a href="https://nightshift-site-psi.vercel.app" className="hover:text-[var(--idle)]" title="Nightshift website">
+              <a href="https://nightshift-sg.vercel.app" className="hover:text-[var(--idle)]" title="Nightshift website">
                 Nightshift
               </a>
             </h1>
