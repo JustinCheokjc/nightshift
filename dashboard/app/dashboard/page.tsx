@@ -16,8 +16,11 @@ import AddDevice, { type Download } from "@/components/AddDevice";
 import { existsSync } from "node:fs";
 import path from "node:path";
 
-const EARNING_RATE_PER_CORE_HOUR = 0.07; // S$, placeholder until the pilot provides measured data
-const IDLE_POWER_DRAW_KW = 0.08;
+// Contributor share of what buyers pay: about S$0.02 per core-hour (cloud spot CPU
+// pricing) minus Nightshift's 30% cut, as modelled in sandbox/marketplace.py.
+// Replace with measured prices once real buyers are paying.
+const EARNING_RATE_PER_CORE_HOUR = 0.014;
+const IDLE_POWER_DRAW_KW = 0.015; // extra draw of a laptop running jobs while idle
 // Agent builds live in public/downloads (built by .github/workflows/build-agent.yml).
 const AGENT_DOWNLOADS: Download[] = [
   { label: "Windows", href: "/downloads/nightshift-agent-windows.exe", note: "Windows 10 or 11" },
