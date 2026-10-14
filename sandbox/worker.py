@@ -1,7 +1,7 @@
-"""Adds this computer to the marketplace sandbox as a real device.
+"""Adds this computer to the market simulator as a real device.
 
 When the computer is plugged in and untouched, it takes CPU tasks from the
-sandbox, computes them for real, and stops the moment you touch the
+simulator, computes them for real, and stops the moment you touch the
 keyboard or mouse. The task is handed back to the market.
 
   python worker.py                  idle after 5 minutes, like the real agent
@@ -52,8 +52,8 @@ def main():
         device = post(args.server, "/api/worker/register",
                       {"name": f"{socket.gethostname()} (this computer)", "cores": os.cpu_count()})["device_id"]
     except (urllib.error.URLError, OSError) as e:
-        sys.exit(f"Can't reach the sandbox at {args.server} ({e}). Start it with: python marketplace.py")
-    print(f"Joined the sandbox. Works after {args.idle_after}s untouched; touch the mouse to stop. Ctrl+C quits.",
+        sys.exit(f"Can't reach the market simulator at {args.server} ({e}). Start it with: python marketplace.py")
+    print(f"Joined the market simulator. Works after {args.idle_after}s untouched; touch the mouse to stop. Ctrl+C quits.",
           flush=True)
 
     last_state = None
@@ -67,14 +67,14 @@ def main():
             res = post(args.server, "/api/worker/poll", {"device_id": device, "state": state})
         except urllib.error.HTTPError as e:
             if e.code == 404:
-                sys.exit("The sandbox was restarted. Run the worker again to rejoin.")
+                sys.exit("The market simulator was restarted. Run the worker again to rejoin.")
             raise
         except (urllib.error.URLError, OSError):
-            print("Sandbox unreachable; retrying.", flush=True)
+            print("Market simulator unreachable; retrying.", flush=True)
             time.sleep(5)
             continue
         if res.get("suspended"):
-            sys.exit("This device was suspended by the sandbox.")
+            sys.exit("This device was suspended by the market simulator.")
 
         task = res.get("task")
         if not task or state != "idle":

@@ -205,7 +205,7 @@ class Market:
                 self._add_buyer(b)
             self.devices = {}
             self._build_fleet()
-            self.log(f"Sandbox started: {self._fleet_size()} devices, {len(BUYERS)} fictional customers.")
+            self.log(f"Simulator started: {self._fleet_size()} devices, {len(BUYERS)} customers.")
 
     def _add_buyer(self, template, manual=False):
         self.buyers[template["name"]] = {**template, "manual": manual, "orders": 0, "spent": 0.0, "refunds": 0.0,
@@ -896,16 +896,16 @@ class Handler(BaseHTTPRequestHandler):
                         pass
             return self._json(runs)
         if path == "/export/invoices.csv":
-            return self._csv("nightshift-sandbox-invoices.csv", mk.invoices())
+            return self._csv("nightshift-market-invoices.csv", mk.invoices())
         if path == "/export/payouts.csv":
-            return self._csv("nightshift-sandbox-payouts.csv", mk.all_devices())
+            return self._csv("nightshift-market-payouts.csv", mk.all_devices())
         if path == "/export/timeseries.csv":
             with mk.lock:
-                return self._csv("nightshift-sandbox-timeseries.csv", list(mk.series))
+                return self._csv("nightshift-market-timeseries.csv", list(mk.series))
         if path == "/export/summary.json":
             body = json.dumps(mk.summary(), indent=2).encode()
             return self._send(body, "application/json",
-                              extra={"Content-Disposition": 'attachment; filename="nightshift-sandbox-run.json"'})
+                              extra={"Content-Disposition": 'attachment; filename="nightshift-market-run.json"'})
         if path.startswith("/api/orders/") and path.endswith("/image"):
             o = mk.orders.get(path.split("/")[3])
             if not o or o["kind"] != "cpu":
@@ -1016,7 +1016,7 @@ def main():
     threading.Thread(target=loop, daemon=True).start()
     threading.Thread(target=live_loop, daemon=True).start()
     server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
-    print(f"Nightshift marketplace sandbox: http://127.0.0.1:{PORT}  (Ctrl+C to stop)", flush=True)
+    print(f"Nightshift market simulator: http://127.0.0.1:{PORT}  (Ctrl+C to stop)", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

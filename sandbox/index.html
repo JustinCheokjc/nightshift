@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nightshift Market Sandbox</title>
+<title>Nightshift Market Simulator</title>
 <link rel="icon" href="/logo.svg">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@500;600&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
 <style>
@@ -152,7 +152,7 @@ td.neg { color: var(--bad); }
 <header class="top">
   <div class="in">
     <div class="bar1">
-      <div class="brand"><img src="/logo.svg" alt=""><b>Nightshift Market Sandbox</b><span class="badge">Sandbox · fictional buyers</span></div>
+      <div class="brand"><img src="/logo.svg" alt=""><b>Nightshift Market Simulator</b></div>
       <div class="controls">
         <span class="clock" id="clock" aria-live="off">…</span>
         <button id="pause" type="button">Pause</button>
@@ -214,7 +214,7 @@ td.neg { color: var(--bad); }
         <p class="mut small" style="margin-top:10px">Changing the fleet replaces the simulated devices. Real and live devices stay.</p>
         <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
         <label class="toggle" for="f-live"><input type="checkbox" id="f-live"> Mirror my live Nightshift devices</label>
-        <p class="mut small">Reads the idle state of devices enrolled on your dashboard every 30 seconds, read-only. Their sandbox work is modelled; nothing runs on them.</p>
+        <p class="mut small">Reads the idle state of devices enrolled on your dashboard every 30 seconds, read-only. Their work here is modelled; nothing runs on them.</p>
       </div>
       <div class="card"><h2>Economics by device type</h2>
         <div class="tbl"><table><thead><tr><th>Type</th><th class="num">Devices</th><th class="num">Contributor net / month</th><th class="num">Nightshift fee / month</th></tr></thead><tbody id="classes"></tbody></table></div>
@@ -236,7 +236,7 @@ td.neg { color: var(--bad); }
       <div class="quote" id="quote"></div>
       <p class="note" id="q-note" aria-live="polite"></p>
     </div>
-    <div class="card"><div class="row" style="margin-bottom:10px"><h2 style="margin:0">Customers <span class="mut small" style="font-weight:500">(fictional)</span></h2>
+    <div class="card"><div class="row" style="margin-bottom:10px"><h2 style="margin:0">Customers</h2>
       <span class="small mut" id="cust-sum"></span></div>
       <p class="mut small" style="margin-bottom:12px">Each customer orders at its own busy hours, with its own order sizes, deadlines and price limits. Switch a customer off to see how the market does without it.</p>
       <div class="custs" id="buyer-rows"></div></div>
@@ -590,8 +590,8 @@ async function renderTrust(s) {
 
 async function renderReport(s) {
   const k = s.kpi, c = s.cfg;
-  $("report-body").innerHTML = `<h2>Nightshift market sandbox: run report</h2>
-    <p class="mut small" style="margin-bottom:12px">${esc(s.scenarios[s.scenario] || "Custom")} · ${s.elapsed_days.toFixed(1)} simulated days · ${k.devices} devices · fictional buyers, no real money</p>
+  $("report-body").innerHTML = `<h2>Nightshift market simulator: run report</h2>
+    <p class="mut small" style="margin-bottom:12px">${esc(s.scenarios[s.scenario] || "Custom")} · ${s.elapsed_days.toFixed(1)} simulated days · ${k.devices} devices · simulated data, no real money</p>
     <div class="kpis" style="margin-bottom:14px">
       <div class="kpi"><b>${sgd(k.revenue)}</b><span>Buyers paid</span></div>
       <div class="kpi"><b>${sgd(k.payouts)}</b><span>Paid to contributors</span></div>
@@ -653,7 +653,7 @@ async function refresh() {
       if (tab === "trust") await renderTrust(S);
       if (tab === "report" && true) await renderReport(S);
     }
-  } catch { $("clock").textContent = "Sandbox stopped. Run: python marketplace.py"; }
+  } catch { $("clock").textContent = "Simulator stopped. Run: python marketplace.py"; }
   busy = false;
 }
 setInterval(refresh, 1000);
