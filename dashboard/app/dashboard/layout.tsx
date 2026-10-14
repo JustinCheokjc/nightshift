@@ -3,7 +3,6 @@ import { signOut } from "@/app/actions/auth";
 import { getContributorActivity } from "@/lib/activity";
 import NavTabs from "@/components/NavTabs";
 import PageTransition from "@/components/PageTransition";
-import CommandPalette from "@/components/CommandPalette";
 import ActivityBell from "@/components/ActivityBell";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -25,11 +24,6 @@ export default async function DashboardLayout({
     ...(isAdmin ? [{ href: "/admin", label: "Operator" }] : []),
   ];
 
-  const commandItems = [
-    ...tabs.map((t) => ({ label: t.label, href: t.href })),
-    { label: "Sign out", onSelect: signOut },
-  ];
-
   return (
     <div className="min-h-screen">
       <header className="border-b border-[var(--line)]">
@@ -46,7 +40,6 @@ export default async function DashboardLayout({
           </div>
           <div className="flex items-center gap-2">
             <NavTabs tabs={tabs} />
-            <CommandPalette items={commandItems} />
             <ActivityBell events={activity} />
             <ThemeToggle />
             <form action={signOut}>
