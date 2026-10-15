@@ -16,14 +16,19 @@ export async function toggleDevicePause(deviceId: string, paused: boolean) {
 
 export async function updateIdleThreshold(deviceId: string, formData: FormData) {
   await requireUser();
-  const minutes = Number(formData.get("minutes"));
-  if (Number.isNaN(minutes) || minutes < 1 || minutes > 30) return;
+  const seconds = Number(formData.get("seconds"));
+  if (Number.isNaN(seconds) || seconds < 30 || seconds > 1800) return;
+  const minutes = Math.max(1, Math.round(seconds / 60));
 
   const supabase = await createClient();
-  await supabase
+  const { error } = await supabase
     .from("device_settings")
-    .update({ idle_threshold_min: minutes })
+    .update({ idle_threshold_sec: seconds, idle_threshold_min: minutes })
     .eq("device_id", deviceId);
+  if (error) {
+    // Before migration 0005 there is no seconds column; keep whole minutes.
+    await supabase.from("device_settings").update({ idle_threshold_min: minutes }).eq("device_id", deviceId);
+  }
   revalidatePath("/dashboard");
 }
 

@@ -241,19 +241,27 @@ export default async function DashboardPage() {
                   className="mb-3 flex items-end gap-2"
                 >
                   <div className="flex-1">
-                    <label className="block text-xs text-[var(--mut)]">
-                      {device.name}: idle after (minutes)
+                    <label
+                      htmlFor={`idle-${device.id}`}
+                      className="block text-xs text-[var(--mut)]"
+                    >
+                      {device.name}: counts as idle after
                     </label>
-                    <input
-                      name="minutes"
-                      type="number"
-                      min={1}
-                      max={30}
-                      defaultValue={
-                        settingsByDevice.get(device.id)?.idle_threshold_min ?? 5
-                      }
+                    <select
+                      id={`idle-${device.id}`}
+                      name="seconds"
+                      defaultValue={String(
+                        settingsByDevice.get(device.id)?.idle_threshold_sec ??
+                          (settingsByDevice.get(device.id)?.idle_threshold_min ?? 5) * 60
+                      )}
                       className="w-full rounded-lg border border-[var(--line)] bg-[var(--surf)] px-2 py-1 text-sm"
-                    />
+                    >
+                      {[30, 60, 120, 300, 600, 900, 1800].map((s) => (
+                        <option key={s} value={s}>
+                          {s < 60 ? `${s} seconds untouched` : `${s / 60} minute${s === 60 ? "" : "s"} untouched`}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <button
                     type="submit"

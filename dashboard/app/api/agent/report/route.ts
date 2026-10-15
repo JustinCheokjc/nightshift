@@ -37,7 +37,11 @@ function clean(r: Record<string, unknown>): Reading | null {
   };
 }
 
-function judge(r: Reading, idleMin: number, cpuMax: number) {
+function untouched(sec: number) {
+  return sec < 60 ? `${sec} s` : `${Math.round(sec / 60)} min`;
+}
+
+function judge(r: Reading, idleSec: number, cpuMax: number) {
   const why: string[] = [];
   if (r.plugged_in !== true) why.push(r.plugged_in === false ? "on battery" : "power state unknown");
   if (r.screen_busy) why.push("full-screen app or video playing");
@@ -45,7 +49,7 @@ function judge(r: Reading, idleMin: number, cpuMax: number) {
   if (r.locked) {
     // counts as untouched
   } else if (r.input_idle_sec === null) why.push("idle time unknown");
-  else if (r.input_idle_sec < idleMin * 60) why.push(`in use (needs ${idleMin} min untouched)`);
+  else if (r.input_idle_sec < idleSec) why.push(`in use (needs ${untouched(idleSec)} untouched)`);
   if (r.cpu_pct === null) why.push("CPU use unknown");
   else if (r.cpu_pct >= cpuMax) why.push(`CPU ${Math.round(r.cpu_pct)}% (needs under ${cpuMax}%)`);
   return why;
@@ -63,9 +67,11 @@ export async function POST(request: Request) {
   // Deleted from the dashboard: tell the agent to stop and forget its token.
   if (!device) return Response.json({ error: "This device was removed from the dashboard.", removed: true }, { status: 410 });
 
-  const idleMin = settings?.idle_threshold_min ?? 5;
+  // Seconds if set (migration 0005), otherwise the older whole-minute setting.
+  const idleSec = settings?.idle_threshold_sec ?? (settings?.idle_threshold_min ?? 5) * 60;
+  const idleMin = Math.max(1, Math.round(idleSec / 60));
   const cpuMax = settings?.cpu_threshold_pct ?? 20;
-  const reply = { paused: device.status === "offline", settings: { idle_threshold_min: idleMin, cpu_threshold_pct: cpuMax } };
+  const reply = { paused: device.status === "offline", settings: { idle_threshold_min: idleMin, idle_threshold_sec: idleSec, cpu_threshold_pct: cpuMax } };
 
   const body = await request.json().catch(() => null);
   const interval = Math.min(Math.max(Number(body?.interval_sec) || 60, 10), 600);
@@ -112,7 +118,7 @@ export async function POST(request: Request) {
   for (const r of readings) {
     const t = Date.parse(r.ts);
     if (prevMs !== null && t <= prevMs) continue; // already recorded
-    const why = judge(r, idleMin, cpuMax);
+    const why = judge(r, idleSec, cpuMax);
     const kind: Kind = why.length ? "in_use" : "usable_idle";
     const gap = prevMs === null ? interval * 1000 : t - prevMs;
 
