@@ -12,6 +12,8 @@ type Reading = {
   input_idle_sec: number | null;
   cpu_pct: number | null;
   ram_pct: number | null;
+  locked: boolean | null; // screen locked: the person has stepped away
+  screen_busy: boolean | null; // full-screen app, presentation or video keeping the screen on
 };
 type Kind = "usable_idle" | "in_use" | "asleep";
 
@@ -30,13 +32,19 @@ function clean(r: Record<string, unknown>): Reading | null {
     input_idle_sec: n(r.input_idle_sec, 10 ** 8),
     cpu_pct: n(r.cpu_pct, 100),
     ram_pct: n(r.ram_pct, 100),
+    locked: typeof r.locked === "boolean" ? r.locked : null,
+    screen_busy: typeof r.screen_busy === "boolean" ? r.screen_busy : null,
   };
 }
 
 function judge(r: Reading, idleMin: number, cpuMax: number) {
   const why: string[] = [];
   if (r.plugged_in !== true) why.push(r.plugged_in === false ? "on battery" : "power state unknown");
-  if (r.input_idle_sec === null) why.push("idle time unknown");
+  if (r.screen_busy) why.push("full-screen app or video playing");
+  // A locked screen means the person has left, even if they touched it moments ago.
+  if (r.locked) {
+    // counts as untouched
+  } else if (r.input_idle_sec === null) why.push("idle time unknown");
   else if (r.input_idle_sec < idleMin * 60) why.push(`in use (needs ${idleMin} min untouched)`);
   if (r.cpu_pct === null) why.push("CPU use unknown");
   else if (r.cpu_pct >= cpuMax) why.push(`CPU ${Math.round(r.cpu_pct)}% (needs under ${cpuMax}%)`);

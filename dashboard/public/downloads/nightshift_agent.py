@@ -30,7 +30,7 @@ try:
 except ImportError:
     psutil = None
 
-AGENT_VERSION = "0.2.0"
+AGENT_VERSION = "0.3.0"
 CONSENT_VERSION = "agent-1"
 INTERVAL_SEC = 60
 SYSTEM = platform.system()  # "Windows", "Darwin" or "Linux"
@@ -276,6 +276,53 @@ def cpu_pct(window=1.0):
     return round(100.0 * (1 - (i2 - i1) / (t2 - t1)), 1) if t2 > t1 else 0.0
 
 
+_cpu_last = None
+
+
+def cpu_avg():
+    """Average CPU use since the previous reading, so a brief spike or dip
+    doesn't decide the whole interval. The first reading samples 1 second."""
+    global _cpu_last
+    if psutil:
+        first = _cpu_last is None
+        _cpu_last = True
+        return psutil.cpu_percent(interval=1.0 if first else None)
+    if SYSTEM == "Darwin":
+        return cpu_pct(window=0)  # ps already reports a decaying average
+    now = _cpu_times()
+    if _cpu_last is None:
+        _cpu_last = now
+        return cpu_pct()
+    (i1, t1), (i2, t2) = _cpu_last, now
+    _cpu_last = now
+    return round(100.0 * (1 - (i2 - i1) / (t2 - t1)), 1) if t2 > t1 else 0.0
+
+
+def screen_signals():
+    """(locked, screen_busy). Locked means the person has stepped away.
+    Screen busy means a full-screen app, a presentation, or an app keeping
+    the display awake (usually video), so the person is likely watching."""
+    if SYSTEM == "Windows":
+        state = ctypes.c_int()
+        locked = busy = None
+        if ctypes.windll.shell32.SHQueryUserNotificationState(ctypes.byref(state)) == 0:
+            locked = state.value == 1          # locked, screensaver or switched user
+            busy = state.value in (2, 3, 4, 7)  # full-screen app, game, presentation
+        flags = wintypes.ULONG()
+        if ctypes.windll.powrprof.CallNtPowerInformation(16, None, 0, ctypes.byref(flags), ctypes.sizeof(flags)) == 0:
+            busy = bool(busy) or bool(flags.value & 0x2)  # ES_DISPLAY_REQUIRED
+        return locked, busy
+    if SYSTEM == "Darwin":
+        locked = "CGSSessionScreenIsLocked" in run(["ioreg", "-n", "Root", "-d1"])
+        m = re.search(r"PreventUserIdleDisplaySleep\s+(\d+)", run(["pmset", "-g", "assertions"]))
+        return locked, (int(m.group(1)) > 0) if m else None
+    out = run(["loginctl", "show-session", os.environ.get("XDG_SESSION_ID", "auto"), "-p", "LockedHint"]).strip()
+    locked = {"LockedHint=yes": True, "LockedHint=no": False}.get(out)
+    inhib = run(["systemd-inhibit", "--list", "--no-legend"])
+    busy = any("idle" in line and "block" in line for line in inhib.splitlines()) if inhib else None
+    return locked, busy
+
+
 def safe(fn, default=None):
     try:
         return fn()
@@ -285,13 +332,16 @@ def safe(fn, default=None):
 
 def reading():
     plugged, battery = safe(power, (None, None))
+    locked, screen_busy = safe(screen_signals, (None, None))
     return {
         "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "plugged_in": plugged,
         "battery_pct": battery,
         "input_idle_sec": safe(input_idle_sec),
-        "cpu_pct": safe(cpu_pct),
+        "cpu_pct": safe(cpu_avg),
         "ram_pct": safe(ram_pct),
+        "locked": locked,
+        "screen_busy": screen_busy,
     }
 
 
