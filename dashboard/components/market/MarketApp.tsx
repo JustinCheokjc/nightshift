@@ -6,19 +6,31 @@ import { createClient } from "@/lib/supabase/client";
 import {
   CLASSES, IMAGE, MAX_ITER, Market, SCENARIOS, type Config, type DeviceClass, type Kind, type LiveRow,
 } from "@/lib/market/engine";
+import PageHeader from "@/components/PageHeader";
+import Icon from "@/components/Icon";
 
 type Snap = ReturnType<typeof takeSnap>;
 type Tab = "overview" | "settings" | "customers" | "contributors" | "trust" | "report";
 const TABS: [Tab, string][] = [["overview", "Overview"], ["settings", "Market settings"], ["customers", "Customers"],
   ["contributors", "Contributors"], ["trust", "Trust & safety"], ["report", "Report"]];
 const RUNS_KEY = "nightshift-market-runs";
-const BTN = "rounded-lg border border-[var(--line)] px-3 py-1.5 text-xs transition-transform duration-150 hover:scale-[1.03] active:scale-[0.97]";
-const BTN_PRIMARY = "rounded-lg bg-[var(--ink)] px-3 py-1.5 text-xs font-medium text-[var(--bg)] transition-transform duration-150 hover:scale-[1.03] active:scale-[0.97]";
+// Simulated minutes per real second, with how long one simulated day takes.
+const SPEEDS: [number, { short: string; title: string }][] = [
+  [0.5, { short: "1×", title: "1 day in 48 min" }], [2, { short: "4×", title: "1 day in 12 min" }],
+  [8, { short: "16×", title: "1 day in 3 min" }], [24, { short: "48×", title: "1 day in 1 min" }],
+];
+const BTN = "btn btn-sm";
+const BTN_PRIMARY = "btn btn-primary";
+const INPUT = "input mt-1.5";
 
 const sgd = (v: number, d = 2) => `${Number(v.toFixed(d)) < 0 ? "−" : ""}S$${Math.abs(v).toFixed(d)}`;
 const pct = (v: number) => `${Math.round(v * 100)}%`;
-const pillFor = (s: string) => (["idle", "working", "active", "delivered"].includes(s) ? "i"
-  : ["in_use", "late", "overdue"].includes(s) ? "w" : ["suspended", "left"].includes(s) ? "b" : "");
+const toneFor = (s: string) => (["idle", "working", "active", "delivered"].includes(s) ? "ok"
+  : ["in_use", "late", "overdue"].includes(s) ? "warn" : ["suspended", "left"].includes(s) ? "bad" : "");
+const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).replace("_", " ");
+function Status({ s }: { s: string }) {
+  return <span className={`badge ${toneFor(s)}${s === "running" || s === "working" ? " live" : ""}`}>{titleCase(s)}</span>;
+}
 
 function takeSnap(m: Market) {
   return {
@@ -80,35 +92,59 @@ export default function MarketApp({ userId }: { userId: string }) {
   }, [userId]);
 
   const refresh = () => m && setSnap(takeSnap(m));
-  if (!snap || !m) return <div className="card text-sm text-[var(--mut)]">Starting the market…</div>;
+  if (!snap || !m) return (
+    <div className="flex flex-col gap-6" aria-busy="true">
+      <PageHeader title="Market" description="How Nightshift sells idle capacity to customers, simulated hour by hour." />
+      <div className="skeleton h-16" />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="skeleton h-24" />)}</div>
+    </div>
+  );
 
   const night = snap.hour >= 22 || snap.hour < 7;
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Market</h1>
-          <p className="mt-1 text-sm text-[var(--mut)]">How Nightshift sells idle capacity to customers, simulated hour by hour.</p>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Market"
+        description="How Nightshift sells idle capacity to customers, simulated hour by hour."
+        actions={<span className="badge warn">Simulated · no real money</span>}
+      />
+
+      {/* Simulation control bar */}
+      <div className="card flex flex-wrap items-center gap-x-6 gap-y-3 py-3 print:hidden">
+        <div className="flex items-center gap-3">
+          <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${night ? "bg-[color-mix(in_srgb,#6d7dff_16%,transparent)] text-[#8f9bff]" : "bg-[color-mix(in_srgb,var(--amber)_16%,transparent)] text-[var(--amber)]"}`}>
+            <Icon name={night ? "moon" : "sun"} size={17} />
+          </span>
+          <div>
+            <p className="text-[15px] font-semibold tabular-nums leading-tight">{clockLabel(snap.clock)}</p>
+            <p className="text-xs text-[var(--mut)]">{night ? "Night: most laptops idle" : "Day: most laptops in use"}</p>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-mono text-base font-semibold tabular-nums">{clockLabel(snap.clock)}</span>
-          <span className="text-xs text-[var(--mut)]">{night ? "night" : "day"}{snap.paused ? " · paused" : ""}</span>
-          <button className={BTN} onClick={() => { m.setPaused(!m.paused); refresh(); }}>{snap.paused ? "Resume" : "Pause"}</button>
-          <label className="sr-only" htmlFor="mk-speed">Speed</label>
-          <select id="mk-speed" className="rounded-lg border border-[var(--line)] bg-[var(--surf)] px-2 py-1.5 text-xs"
-            value={snap.speed} onChange={(e) => { m.setSpeed(Number(e.target.value)); refresh(); }}>
-            <option value={0.5}>1 day in 48 min</option><option value={2}>1 day in 12 min</option>
-            <option value={8}>1 day in 3 min</option><option value={24}>1 day in 1 min</option>
-          </select>
-          <button className={BTN} onClick={() => { m.reset(); refresh(); }}>Reset</button>
+        <span className={`badge ${snap.paused ? "" : "ok live"}`}>{snap.paused ? "Paused" : "Running"}</span>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <div role="radiogroup" aria-label="Speed" className="flex rounded-lg border border-[var(--line)] bg-[var(--bg)] p-0.5">
+            {SPEEDS.map(([v, l]) => (
+              <button key={v} role="radio" aria-checked={snap.speed === v} title={l.title}
+                onClick={() => { m.setSpeed(v); refresh(); }}
+                className={`h-7 rounded-md px-2.5 text-xs font-medium transition-colors ${snap.speed === v ? "bg-[var(--surf)] text-[var(--ink)] shadow-sm" : "text-[var(--mut)] hover:text-[var(--ink)]"}`}>
+                {l.short}
+              </button>
+            ))}
+          </div>
+          <button className="btn" onClick={() => { m.setPaused(!m.paused); refresh(); }}>
+            <Icon name={snap.paused ? "play" : "pause"} size={14} /> {snap.paused ? "Resume" : "Pause"}
+          </button>
+          <button className="btn" onClick={() => { m.reset(); refresh(); }}>
+            <Icon name="reset" size={14} /> Reset
+          </button>
         </div>
       </div>
 
-      <div className="flex gap-1 overflow-x-auto border-b border-[var(--line)] print:hidden" role="tablist">
-        {TABS.map(([id, label]) => (
+      <div className="-mt-2 flex gap-1 overflow-x-auto border-b border-[var(--line)] print:hidden" role="tablist">
+        {TABS.map(([id, name]) => (
           <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
-            className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm ${tab === id ? "border-[var(--idle)] font-medium" : "border-transparent text-[var(--mut)]"}`}>
-            {label}
+            className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2.5 text-[13px] font-medium transition-colors ${tab === id ? "border-[var(--idle)] text-[var(--ink)]" : "border-transparent text-[var(--mut)] hover:text-[var(--ink)]"}`}>
+            {name}
           </button>
         ))}
       </div>
@@ -120,22 +156,50 @@ export default function MarketApp({ userId }: { userId: string }) {
       {tab === "trust" && <Trust s={snap} />}
       {tab === "report" && <Report s={snap} m={m} />}
 
-      <p className="text-center text-xs text-[var(--mut)]">Simulated market · no real money</p>
     </div>
   );
 }
 
 // ---------------------------------------------------------------- shared
-function Kpis({ items }: { items: { v: string; l: string; tone?: "good" | "bad" }[] }) {
+type KpiItem = { v: string; l: string; sub?: string; tone?: "good" | "warn" | "bad" };
+function Kpis({ items }: { items: KpiItem[] }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
       {items.map((k) => (
-        <div key={k.l} className="card">
-          <b className={`block font-mono text-xl tabular-nums ${k.tone === "good" ? "text-[var(--idle)]" : k.tone === "bad" ? "text-[var(--bad)]" : ""}`}>{k.v}</b>
-          <span className="text-xs text-[var(--mut)]">{k.l}</span>
+        <div key={k.l} className="card flex flex-col gap-2 p-4">
+          <span className="text-xs font-medium text-[var(--mut)]">{k.l}</span>
+          <b className={`text-[22px] font-semibold leading-none tracking-tight tabular-nums ${k.tone === "good" ? "text-[var(--idle)]" : k.tone === "warn" ? "text-[var(--amber)]" : k.tone === "bad" ? "text-[var(--bad)]" : ""}`}>{k.v}</b>
+          {k.sub && <span className="text-xs text-[var(--mut)]">{k.sub}</span>}
         </div>
       ))}
     </div>
+  );
+}
+
+/** Small on/off switch (a styled checkbox, so it stays keyboard and screen-reader friendly). */
+function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <span className="relative inline-flex h-[18px] w-8 shrink-0">
+      <input type="checkbox" role="switch" aria-label={label} checked={checked} onChange={(e) => onChange(e.target.checked)}
+        className="peer absolute inset-0 z-10 cursor-pointer opacity-0" />
+      <span className="absolute inset-0 rounded-full bg-[var(--use)] transition-colors peer-checked:bg-[var(--idle)] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--idle)]" />
+      <span className="absolute left-0.5 top-0.5 h-3.5 w-3.5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-3.5" />
+    </span>
+  );
+}
+
+/** Card with a title row (title, subtitle, optional right-hand content). */
+function Panel({ title, sub, right, children, className = "" }: {
+  title: string; sub?: string; right?: React.ReactNode; children: React.ReactNode; className?: string;
+}) {
+  return (
+    <section className={`card ${className}`}>
+      <div className="card-head">
+        <div><h2 className="card-title">{title}</h2>{sub && <p className="card-sub">{sub}</p>}</div>
+        {right}
+      </div>
+      {children}
+    </section>
   );
 }
 
@@ -148,7 +212,7 @@ function themeColors() {
   return { idle: get("--idle", "#1f8a7d"), use: get("--use", "#b9c7ce"), sleep: get("--sleep", "#e3eaed"),
     ink: get("--ink", "#14303a"), mut: get("--mut", "#5b7480"), line: get("--line", "#d5dfe3") };
 }
-const moneyTick = (v: number, max: number) => `S$${v.toFixed(max < 1 ? 2 : max < 10 ? 1 : 0)}`;
+const moneyTick = (v: number, max: number) => `${v < 0 ? "−" : ""}S$${Math.abs(v).toFixed(max < 1 ? 2 : max < 10 ? 1 : 0)}`;
 
 function FleetChart({ data }: { data: Snap["series"] }) {
   if (data.length < 2) return <p className="py-10 text-center text-sm text-[var(--mut)]">Collecting data…</p>;
@@ -194,15 +258,18 @@ function MoneyChart({ data }: { data: Snap["series"] }) {
 
 function Legend({ items }: { items: [string, string, number?][] }) {
   return (
-    <div className="mt-2 flex flex-wrap gap-3 text-xs text-[var(--mut)]">
-      {items.map(([label, color, op]) => (
-        <span key={label}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-[-1px]" style={{ background: color, opacity: op ?? 1 }} />{label}</span>
+    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--mut)]">
+      {items.map(([name, color, op]) => (
+        <span key={name} className="flex items-center gap-1.5">
+          <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: color, opacity: op ?? 1 }} />{name}
+        </span>
       ))}
     </div>
   );
 }
 
 // ---------------------------------------------------------------- overview
+const EVENT_DOT = { good: "bg-[var(--idle)]", warn: "bg-[var(--amber)]", bad: "bg-[var(--bad)]" } as const;
 const LUT: [number, number, number][] = Array.from({ length: MAX_ITER + 1 }, (_, i) => {
   if (i >= MAX_ITER) return [10, 24, 30];
   const t = Math.sqrt(i / MAX_ITER), h = 200 - 155 * t, l = 14 + 70 * t, a = (0.55 * Math.min(l, 100 - l)) / 100;
@@ -231,25 +298,29 @@ function Overview({ s, m }: { s: Snap; m: Market }) {
   return (
     <>
       <Kpis items={[
-        { v: sgd(k.revenue), l: "Customers paid (after refunds)" },
-        { v: sgd(k.payouts), l: "Paid to contributors" },
-        { v: sgd(k.electricity), l: "Contributors' electricity" },
-        { v: sgd(k.profit), l: `Nightshift profit · ${pct(k.margin)} margin`, tone: k.profit < 0 ? "bad" : "good" },
-        { v: sgd(k.profit_per_month, 0), l: "Profit per month at this pace" },
-        { v: `×${k.surge.toFixed(2)}`, l: `GPU surge · ${k.backlog_gpu.toFixed(1)} GPU-h waiting` },
+        { v: sgd(k.revenue), l: "Customers paid", sub: "After late refunds" },
+        { v: sgd(k.payouts), l: "Paid to contributors", sub: `Nightshift keeps ${pct(s.cfg.take_rate)}` },
+        { v: sgd(k.electricity), l: "Contributor electricity", sub: `At S$${s.cfg.electricity.toFixed(2)}/kWh` },
+        { v: sgd(k.profit), l: "Nightshift profit", sub: `${pct(k.margin)} margin`, tone: k.profit < 0 ? "bad" : "good" },
+        { v: sgd(k.profit_per_month, 0), l: "Profit per month", sub: "At the current pace" },
+        { v: `×${k.surge.toFixed(2)}`, l: "GPU surge", sub: `${k.backlog_gpu.toFixed(1)} GPU-h waiting`, tone: k.surge > 1.5 ? "warn" : undefined },
       ]} />
-      <div className="grid gap-3 lg:grid-cols-2">
-        <div className="card"><h3 className="mb-2 text-sm font-semibold">Fleet availability</h3><FleetChart data={s.series} />
-          <Legend items={[["Working", "var(--idle)"], ["Idle, waiting", "var(--idle)", 0.35], ["In use", "var(--use)"], ["Asleep or off", "var(--sleep)"]]} /></div>
-        <div className="card"><h3 className="mb-2 text-sm font-semibold">Money so far</h3><MoneyChart data={s.series} />
-          <Legend items={[["Customers paid", "var(--ink)"], ["Paid to contributors", "var(--mut)"], ["Nightshift profit", "var(--idle)"]]} /></div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Panel title="Fleet availability" sub="Devices by state, over simulated time."
+          right={<Legend items={[["Working", "var(--idle)"], ["Idle", "var(--idle)", 0.35], ["In use", "var(--use)"], ["Off", "var(--sleep)"]]} />}>
+          <FleetChart data={s.series} />
+        </Panel>
+        <Panel title="Money so far" sub="Running totals since the simulation started."
+          right={<Legend items={[["Customers paid", "var(--ink)"], ["Contributors", "var(--mut)"], ["Profit", "var(--idle)"]]} />}>
+          <MoneyChart data={s.series} />
+        </Panel>
       </div>
-      <div className="card">
-        <h3 className="mb-3 text-sm font-semibold">Latest orders</h3>
+      <Panel title="Latest orders" sub="CPU orders render a Mandelbrot tile as their stand-in workload. GPU batches fill in as tasks finish."
+        right={<span className="text-xs text-[var(--mut)]">{s.orders.filter((o) => o.status === "running").length} running</span>}>
         {!s.orders.length ? <p className="py-6 text-center text-sm text-[var(--mut)]">Waiting for the first order…</p> : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {s.orders.map((o) => (
-              <div key={o.id} className="flex flex-col gap-1.5 rounded-lg border border-[var(--line)] p-2">
+              <div key={o.id} className="flex flex-col gap-2 rounded-lg border border-[var(--line)] bg-[var(--bg)] p-2.5 transition-colors hover:border-[color-mix(in_srgb,var(--idle)_45%,var(--line))]">
                 {o.kind === "cpu" ? <Preview m={m} id={o.id} version={o.version} /> : (
                   <div className="grid aspect-square grid-cols-4 gap-1 rounded-md bg-[#0b1a20] p-2" aria-label="GPU batch progress">
                     {Array.from({ length: Math.min(o.total, 16) }, (_, i) => (
@@ -257,29 +328,38 @@ function Overview({ s, m }: { s: Snap; m: Market }) {
                     ))}
                   </div>
                 )}
-                <b className="truncate text-sm">{o.buyer}</b>
-                <div className="flex justify-between text-xs text-[var(--mut)]"><span>{o.hours} {o.kind === "cpu" ? "core-h" : "GPU-h"}{o.surge > 1 ? ` · ×${o.surge}` : ""}</span><span>{sgd(o.price, 3)}</span></div>
-                <div className="h-1 overflow-hidden rounded bg-[var(--sleep)]"><i className="block h-full bg-[var(--idle)]" style={{ width: `${(100 * o.done) / o.total}%` }} /></div>
+                <div className="flex items-start justify-between gap-2">
+                  <b className="truncate text-[13px] font-semibold">{o.buyer}</b>
+                  <span className="shrink-0 rounded bg-[var(--sleep)] px-1.5 py-0.5 text-[10px] font-semibold uppercase text-[var(--mut)]">{o.kind}</span>
+                </div>
+                <div className="flex justify-between text-xs text-[var(--mut)]">
+                  <span className="tabular-nums">{o.hours} {o.kind === "cpu" ? "core-h" : "GPU-h"}{o.surge > 1 ? ` · ×${o.surge}` : ""}</span>
+                  <span className="font-medium tabular-nums text-[var(--ink)]">{sgd(o.price, 3)}</span>
+                </div>
+                <div className="h-1 overflow-hidden rounded-full bg-[var(--sleep)]"><i className="block h-full rounded-full bg-[var(--idle)] transition-[width] duration-500" style={{ width: `${(100 * o.done) / o.total}%` }} /></div>
                 <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-[var(--mut)]">
-                  <span>{o.done}/{o.total} · due {o.due.split(", ")[1]}</span>
-                  <span className={`pill ${pillFor(o.overdue ? "overdue" : o.status)}`}>{o.overdue ? "overdue" : o.status}</span>
+                  <span className="tabular-nums">{o.done}/{o.total} · due {o.due.split(", ")[1]}</span>
+                  <Status s={o.overdue ? "overdue" : o.status} />
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
-      <div className="card">
-        <h3 className="mb-2 text-sm font-semibold">Activity</h3>
-        <ul className="max-h-[320px] overflow-y-auto text-sm">
+      </Panel>
+      <Panel title="Activity" sub="Most recent first.">
+        <ol className="relative max-h-[340px] overflow-y-auto pl-1">
           {s.events.map((e, i) => (
-            <li key={i} className="grid grid-cols-[100px_1fr] gap-2 border-b border-[var(--line)] py-1.5 last:border-0">
-              <time className="font-mono text-xs text-[var(--mut)]">{e.t}</time>
-              <span className={e.kind === "good" ? "text-[var(--idle)]" : e.kind === "warn" ? "text-[var(--amber)]" : e.kind === "bad" ? "font-semibold text-[var(--bad)]" : ""}>{e.msg}</span>
+            <li key={i} className="relative flex gap-3 pb-3 last:pb-0">
+              {i < s.events.length - 1 && <span className="absolute left-[4px] top-3 h-full w-px bg-[var(--line)]" aria-hidden="true" />}
+              <span className={`relative mt-1.5 h-[9px] w-[9px] shrink-0 rounded-full ring-2 ring-[var(--surf)] ${EVENT_DOT[e.kind as keyof typeof EVENT_DOT] ?? "bg-[var(--use)]"}`} aria-hidden="true" />
+              <div className="flex min-w-0 flex-1 flex-wrap items-baseline justify-between gap-x-4">
+                <span className={`text-[13px] ${e.kind === "bad" ? "font-medium text-[var(--bad)]" : ""}`}>{e.msg}</span>
+                <time className="shrink-0 text-xs tabular-nums text-[var(--mut)]">{e.t}</time>
+              </div>
             </li>
           ))}
-        </ul>
-      </div>
+        </ol>
+      </Panel>
     </>
   );
 }
@@ -303,56 +383,55 @@ function Settings({ s, m, refresh }: { s: Snap; m: Market; refresh: () => void }
   return (
     <>
       <div className="card">
-        <h3 className="mb-1 text-sm font-semibold">Scenarios</h3>
+        <h3 className="card-title mb-3">Scenarios</h3>
         <p className="mb-3 text-xs text-[var(--mut)]">Each scenario resets the assumptions to defaults, then applies its change.</p>
         <div className="flex flex-wrap gap-2">
           {Object.entries(SCENARIOS).map(([id, sc]) => (
-            <button key={id} className={`${BTN} ${s.scenario === id ? "border-[var(--idle)] font-semibold text-[var(--idle)]" : ""}`}
+            <button key={id} aria-pressed={s.scenario === id} className={`${BTN} ${s.scenario === id ? "border-[var(--idle)] bg-[color-mix(in_srgb,var(--idle)_12%,transparent)] text-[var(--idle)]" : ""}`}
               onClick={() => { m.applyScenario(id); setFleet(m.cfg.fleet); refresh(); }}>{sc.label}</button>
           ))}
         </div>
       </div>
       <div className="card">
-        <h3 className="mb-3 text-sm font-semibold">Assumptions</h3>
+        <h3 className="card-title mb-3">Assumptions</h3>
         <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
           {SLIDERS.map(([key, label, min, max, step, fmt, hint]) => (
             <div key={key}>
-              <label htmlFor={`mk-${key}`} className="flex justify-between text-sm font-medium">{label}
-                <output className="font-mono text-[var(--idle)]">{fmt(Number(s.cfg[key]))}</output></label>
+              <label htmlFor={`mk-${key}`} className="mb-1 flex items-center justify-between gap-2 text-[13px] font-medium">{label}
+                <output className="rounded-md bg-[color-mix(in_srgb,var(--idle)_12%,transparent)] px-1.5 py-0.5 text-xs font-semibold tabular-nums text-[var(--idle)]">{fmt(Number(s.cfg[key]))}</output></label>
               <input id={`mk-${key}`} type="range" min={min} max={max} step={step} value={Number(s.cfg[key])}
                 className="w-full accent-[var(--idle)]" onChange={(e) => { m.applyConfig({ [key]: Number(e.target.value) }); refresh(); }} />
-              <p className="text-xs text-[var(--mut)]">{hint}</p>
+              <p className="mt-0.5 text-xs text-[var(--mut)]">{hint}</p>
             </div>
           ))}
         </div>
       </div>
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="card">
-          <h3 className="mb-3 text-sm font-semibold">Simulated fleet</h3>
+          <h3 className="card-title mb-3">Simulated fleet</h3>
           <div className="grid grid-cols-3 gap-2">
             {(Object.keys(CLASSES) as DeviceClass[]).map((c) => (
               <label key={c} className="text-xs text-[var(--mut)]">{CLASSES[c].label}s
                 <input type="number" min={0} max={2000} value={fleet[c]}
                   onChange={(e) => setFleet({ ...fleet, [c]: Number(e.target.value) })}
-                  className="mt-1 w-full rounded-lg border border-[var(--line)] bg-[var(--surf)] px-2 py-1 text-sm text-[var(--ink)]" />
+                  className={INPUT} />
               </label>
             ))}
           </div>
           <button className={`${BTN_PRIMARY} mt-3`} onClick={() => { m.applyConfig({ fleet }); refresh(); }}>Apply fleet</button>
-          <label className="mt-4 flex items-center gap-2 text-sm font-medium">
-            <input type="checkbox" checked={s.cfg.live_fleet} className="h-4 w-4 accent-[var(--idle)]"
-              onChange={(e) => { m.applyConfig({ live_fleet: e.target.checked }); refresh(); }} />
+          <label className="mt-5 flex cursor-pointer items-center gap-2.5 border-t border-[var(--line)] pt-4 text-[13px] font-medium">
+            <Toggle checked={s.cfg.live_fleet} onChange={(v) => { m.applyConfig({ live_fleet: v }); refresh(); }} label="Include my enrolled devices" />
             Include my enrolled devices
           </label>
           <p className="text-xs text-[var(--mut)]">Your devices join with their real idle status, refreshed every 30 seconds. Their work in the market is modelled; nothing runs on them.</p>
         </div>
         <div className="card">
-          <h3 className="mb-3 text-sm font-semibold">Economics by device type</h3>
-          <table className="w-full text-sm">
-            <thead><tr className="text-left text-xs text-[var(--mut)]"><th className="py-1">Type</th><th className="text-right">Devices</th><th className="text-right">Contributor net / month</th><th className="text-right">Nightshift fee / month</th></tr></thead>
+          <h3 className="card-title mb-3">Economics by device type</h3>
+          <table className="table table-sm">
+            <thead><tr><th>Type</th><th className="text-right">Devices</th><th className="text-right">Contributor net / month</th><th className="text-right">Nightshift fee / month</th></tr></thead>
             <tbody>{s.classes.map((c) => (
-              <tr key={c.cls} className="border-t border-[var(--line)]"><td className="py-1.5">{c.label}</td><td className="text-right font-mono">{c.count}</td>
-                <td className="text-right font-mono">{sgd(c.net_per_month)}</td><td className="text-right font-mono">{sgd(c.fees_per_month)}</td></tr>
+              <tr key={c.cls}><td>{c.label}</td><td className="text-right tabular-nums">{c.count}</td>
+                <td className="text-right tabular-nums">{sgd(c.net_per_month)}</td><td className="text-right tabular-nums">{sgd(c.fees_per_month)}</td></tr>
             ))}</tbody>
           </table>
           <p className="mt-2 text-xs text-[var(--mut)]">Per device, after electricity, at the current pace.</p>
@@ -376,19 +455,19 @@ function Customers({ s, m, refresh }: { s: Snap; m: Market; refresh: () => void 
   const busy = (b: Snap["buyers"][number]) => !b.hours.length ? "When you order"
     : b.hours.some(([a, z]) => a === 0 && z === 24) ? "All day" : b.hours.map(([a, z]) => `${hh(a)}–${hh(z)}`).join(", ");
   const invoices = m.invoices(filter || undefined).slice(0, 50);
-  const input = "w-full rounded-lg border border-[var(--line)] bg-[var(--surf)] px-2 py-1.5 text-sm";
+  const input = INPUT;
   return (
     <>
       <div className="card">
-        <h3 className="mb-1 text-sm font-semibold">Order compute</h3>
+        <h3 className="card-title mb-3">Order compute</h3>
         <p className="mb-3 text-xs text-[var(--mut)]">Get a quote and place an order as a customer. Prices and delivery come from the live market.</p>
         <div className="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <label className="text-xs text-[var(--mut)]">Company<input className={input} value={buyer} maxLength={60} onChange={(e) => setBuyer(e.target.value)} /></label>
-          <label className="text-xs text-[var(--mut)]">Workload<select className={input} value={kind} onChange={(e) => setKind(e.target.value as Kind)}>
+          <label className="text-xs font-medium text-[var(--mut)]">Company<input className={input} value={buyer} maxLength={60} onChange={(e) => setBuyer(e.target.value)} /></label>
+          <label className="text-xs font-medium text-[var(--mut)]">Workload<select className={input} value={kind} onChange={(e) => setKind(e.target.value as Kind)}>
             <option value="cpu">CPU batch (render, simulation)</option><option value="gpu">GPU inference</option></select></label>
-          <label className="text-xs text-[var(--mut)]">{kind === "cpu" ? "Core-hours" : "GPU-hours"}<input className={input} type="number" min={0.25} max={500} step={0.25} value={hours} onChange={(e) => setHours(Number(e.target.value))} /></label>
-          <label className="text-xs text-[var(--mut)]">Needed within (hours)<input className={input} type="number" min={1} max={72} value={deadline} onChange={(e) => setDeadline(Number(e.target.value))} /></label>
-          <button className={`${BTN_PRIMARY} py-2`} onClick={() => {
+          <label className="text-xs font-medium text-[var(--mut)]">{kind === "cpu" ? "Core-hours" : "GPU-hours"}<input className={input} type="number" min={0.25} max={500} step={0.25} value={hours} onChange={(e) => setHours(Number(e.target.value))} /></label>
+          <label className="text-xs font-medium text-[var(--mut)]">Needed within (hours)<input className={input} type="number" min={1} max={72} value={deadline} onChange={(e) => setDeadline(Number(e.target.value))} /></label>
+          <button className={BTN_PRIMARY} onClick={() => {
             if (!buyer.trim()) { setNote({ text: "Enter a company name.", ok: false }); return; }
             if (!(hours > 0) || !(deadline > 0)) { setNote({ text: "Hours and deadline must be above zero.", ok: false }); return; }
             const o = m.placeOrder(buyer.trim(), hours, deadline, kind);
@@ -396,10 +475,15 @@ function Customers({ s, m, refresh }: { s: Snap; m: Market; refresh: () => void 
             refresh();
           }}>Place order</button>
         </div>
-        <div className="mt-3 grid gap-3 rounded-lg bg-[var(--bg)] p-3 sm:grid-cols-3">
-          <div><b className="block font-mono text-lg">{sgd(q.price, 3)}</b><span className="text-xs text-[var(--mut)]">Total price</span></div>
-          <div><b className="block font-mono text-lg">{sgd(q.unit_price, 3)}</b><span className="text-xs text-[var(--mut)]">Per {kind === "cpu" ? "core" : "GPU"}-hour{q.surge > 1 ? ` (surge ×${q.surge})` : ""}</span></div>
-          <div><b className="block font-mono text-lg">{eta}</b><span className="text-xs text-[var(--mut)]">Estimated delivery at current capacity</span></div>
+        <div className="mt-4 grid divide-y divide-[var(--line)] rounded-lg border border-[var(--line)] bg-[var(--bg)] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          {([[sgd(q.price, 3), "Total price"],
+            [sgd(q.unit_price, 3), `Per ${kind === "cpu" ? "core" : "GPU"}-hour${q.surge > 1 ? ` (surge ×${q.surge})` : ""}`],
+            [eta, "Estimated delivery at current capacity"]] as [string, string][]).map(([v, l]) => (
+            <div key={l} className="px-4 py-3">
+              <span className="block text-xs text-[var(--mut)]">{l}</span>
+              <b className="mt-1 block text-lg font-semibold tabular-nums">{v}</b>
+            </div>
+          ))}
         </div>
         {(q.eta_hours === null || q.eta_hours > deadline) && <p className="mt-2 text-xs text-[var(--amber)]">Likely to miss this deadline at current capacity. Late orders get a partial refund.</p>}
         {note && <p className={`mt-2 text-xs ${note.ok ? "text-[var(--idle)]" : "text-[var(--bad)]"}`} aria-live="polite">{note.text}</p>}
@@ -407,43 +491,43 @@ function Customers({ s, m, refresh }: { s: Snap; m: Market; refresh: () => void 
 
       <div className="card">
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-          <h3 className="text-sm font-semibold">Customers</h3>
+          <h3 className="card-title">Customers</h3>
           <span className="text-xs text-[var(--mut)]">{s.buyers.filter((b) => b.enabled && b.status === "active").length} of {s.buyers.length} ordering</span>
         </div>
         <p className="mb-3 text-xs text-[var(--mut)]">Each customer orders at its own busy hours, with its own order sizes, deadlines and price limits. Switch one off to see how the market does without it.</p>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {s.buyers.map((b) => (
-            <div key={b.name} className={`flex flex-col gap-2 rounded-lg border p-3 ${b.manual ? "border-[var(--idle)]" : "border-[var(--line)]"} ${b.enabled ? "" : "opacity-55"}`}>
+            <div key={b.name} className={`flex flex-col gap-3 rounded-lg border bg-[var(--bg)] p-4 ${b.manual ? "border-[var(--idle)]" : "border-[var(--line)]"} ${b.enabled ? "" : "opacity-55"}`}>
               <div className="flex items-start justify-between gap-2">
-                <div><b className="block">{b.name}</b><span className="text-xs text-[var(--mut)]">{b.segment}</span></div>
-                <span className="rounded bg-[var(--sleep)] px-1.5 font-mono text-[10px] font-semibold">{b.kind.toUpperCase()}</span>
+                <div className="min-w-0">
+                  <b className="block truncate text-sm font-semibold" title={b.name}>{b.name}</b>
+                  <span className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-[var(--mut)]">{b.segment} <Status s={!b.enabled ? "switched off" : b.status} /></span>
+                </div>
+                <span className="shrink-0 rounded bg-[var(--sleep)] px-1.5 py-0.5 text-[10px] font-semibold uppercase text-[var(--mut)]">{b.kind}</span>
               </div>
               <p className="text-xs text-[var(--mut)]">{b.what}. {b.note}</p>
               <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
-                <dt className="text-[var(--mut)]">Busy hours</dt><dd className="text-right font-mono">{busy(b)}</dd>
-                <dt className="text-[var(--mut)]">Typical order</dt><dd className="text-right font-mono">{b.size[0]}–{b.size[1]} {b.kind === "cpu" ? "core-h" : "GPU-h"}</dd>
-                <dt className="text-[var(--mut)]">Needs it within</dt><dd className="text-right font-mono">{b.deadline_h} h</dd>
-                <dt className="text-[var(--mut)]">Pays</dt><dd className="text-right font-mono">{b.premium === 1 ? "market price" : `${b.premium > 1 ? "+" : "−"}${Math.abs(Math.round((b.premium - 1) * 100))}% vs market`}</dd>
-                {b.max_surge && <><dt className="text-[var(--mut)]">Stops buying above</dt><dd className="text-right font-mono">×{b.max_surge} surge</dd></>}
+                <dt className="text-[var(--mut)]">Busy hours</dt><dd className="text-right tabular-nums">{busy(b)}</dd>
+                <dt className="text-[var(--mut)]">Typical order</dt><dd className="text-right tabular-nums">{b.size[0]}–{b.size[1]} {b.kind === "cpu" ? "core-h" : "GPU-h"}</dd>
+                <dt className="text-[var(--mut)]">Needs it within</dt><dd className="text-right tabular-nums">{b.deadline_h} h</dd>
+                <dt className="text-[var(--mut)]">Pays</dt><dd className="text-right tabular-nums">{b.premium === 1 ? "market price" : `${b.premium > 1 ? "+" : "−"}${Math.abs(Math.round((b.premium - 1) * 100))}% vs market`}</dd>
+                {b.max_surge && <><dt className="text-[var(--mut)]">Stops buying above</dt><dd className="text-right tabular-nums">×{b.max_surge} surge</dd></>}
                 <dt className="text-[var(--mut)]">Satisfaction</dt>
                 <dd className="flex justify-end"><span className="mt-1 h-1.5 w-16 overflow-hidden rounded bg-[var(--sleep)]"><i className="block h-full bg-[var(--idle)]" style={{ width: `${b.satisfaction * 100}%` }} /></span></dd>
               </dl>
               <div className="grid grid-cols-4 gap-1 border-y border-[var(--line)] py-2 text-center">
                 {[[b.orders, "Orders"], [`${b.delivered - b.late}/${b.delivered}`, "On time"], [b.declined, "Declined"], [sgd(b.spent), "Spent"]].map(([v, l]) => (
-                  <div key={String(l)}><b className="block font-mono text-sm">{v}</b><span className="text-[10px] text-[var(--mut)]">{l}</span></div>
+                  <div key={String(l)}><b className="block text-sm font-semibold tabular-nums">{v}</b><span className="text-[10px] uppercase tracking-wide text-[var(--mut)]">{l}</span></div>
                 ))}
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className={`pill ${pillFor(!b.enabled ? "" : b.status)}`}>{!b.enabled ? "switched off" : b.status}</span>
-                {!b.manual && (
-                  <span className="flex items-center gap-2">
-                    <label className="flex items-center gap-1 text-xs font-medium">
-                      <input type="checkbox" checked={b.enabled} className="accent-[var(--idle)]" onChange={(e) => { m.toggleBuyer(b.name, e.target.checked); refresh(); }} /> In market
-                    </label>
-                    <button className={BTN} onClick={() => { m.placeOrder(b.name); refresh(); }}>Order now</button>
-                  </span>
-                )}
-              </div>
+              {!b.manual && (
+                <div className="mt-auto flex items-center justify-between gap-2">
+                  <label className="flex cursor-pointer items-center gap-2 text-xs font-medium">
+                    <Toggle checked={b.enabled} onChange={(v) => { m.toggleBuyer(b.name, v); refresh(); }} label={`${b.name} in market`} /> In market
+                  </label>
+                  <button className={BTN} onClick={() => { m.placeOrder(b.name); refresh(); }}>Order now</button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -451,25 +535,25 @@ function Customers({ s, m, refresh }: { s: Snap; m: Market; refresh: () => void 
 
       <div className="card">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">Invoices</h3>
+          <h3 className="card-title">Invoices</h3>
           <span className="flex gap-2">
-            <select aria-label="Filter by customer" className="rounded-lg border border-[var(--line)] bg-[var(--surf)] px-2 py-1 text-xs" value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <select aria-label="Filter by customer" className="input h-8 w-auto text-xs" value={filter} onChange={(e) => setFilter(e.target.value)}>
               <option value="">All customers</option>{s.buyers.map((b) => <option key={b.name}>{b.name}</option>)}
             </select>
             <button className={BTN} onClick={() => download("nightshift-market-invoices.csv", m.invoices())}>Export CSV</button>
           </span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full whitespace-nowrap text-sm">
-            <thead><tr className="text-left text-xs text-[var(--mut)]">{["Order", "Customer", "Placed", "Delivered", "Hours", "Unit price", "Price", "Refund", "Net", "Status"].map((h, i) => <th key={h} className={`py-1 pr-3 ${i >= 4 && i <= 8 ? "text-right" : ""}`}>{h}</th>)}</tr></thead>
+          <table className="table table-sm whitespace-nowrap">
+            <thead><tr>{["Order", "Customer", "Placed", "Delivered", "Hours", "Unit price", "Price", "Refund", "Net", "Status"].map((h, i) => <th key={h} className={`${i >= 4 && i <= 8 ? "text-right" : ""}`}>{h}</th>)}</tr></thead>
             <tbody>
               {invoices.map((o) => (
-                <tr key={o.id} className="border-t border-[var(--line)]">
-                  <td className="py-1.5 pr-3">{o.id}</td><td className="pr-3">{o.buyer}</td><td className="pr-3">{o.created}</td><td className="pr-3">{o.delivered || "—"}</td>
-                  <td className="pr-3 text-right font-mono">{o.hours}</td><td className="pr-3 text-right font-mono">{sgd(o.unit_price, 3)}</td>
-                  <td className="pr-3 text-right font-mono">{sgd(o.price, 3)}</td><td className="pr-3 text-right font-mono">{o.refund ? sgd(-o.refund, 3) : "—"}</td>
-                  <td className="pr-3 text-right font-mono">{sgd(o.price - o.refund, 3)}</td>
-                  <td><span className={`pill ${pillFor(o.overdue ? "overdue" : o.status)}`}>{o.overdue ? "overdue" : o.status}</span></td>
+                <tr key={o.id}>
+                  <td>{o.id}</td><td>{o.buyer}</td><td>{o.created}</td><td>{o.delivered || "—"}</td>
+                  <td className="text-right tabular-nums">{o.hours}</td><td className="text-right tabular-nums">{sgd(o.unit_price, 3)}</td>
+                  <td className="text-right tabular-nums">{sgd(o.price, 3)}</td><td className="text-right tabular-nums">{o.refund ? sgd(-o.refund, 3) : "—"}</td>
+                  <td className="text-right tabular-nums">{sgd(o.price - o.refund, 3)}</td>
+                  <td><Status s={o.overdue ? "overdue" : o.status} /></td>
                 </tr>
               ))}
               {!invoices.length && <tr><td colSpan={10} className="py-6 text-center text-[var(--mut)]">No orders yet.</td></tr>}
@@ -487,10 +571,10 @@ function Contributors({ s }: { s: Snap }) {
   const st = s.devices.find((d) => d.id === sel) ?? s.devices[0];
   const groups: [string, string][] = [["live", "Your devices"], ["sim", "Simulated contributors"]];
   return (
-    <div className="grid gap-3 lg:grid-cols-2">
-      <div className="card">
-        <h3 className="mb-2 text-sm font-semibold">Payout statement</h3>
-        <select aria-label="Device" className="mb-3 w-full rounded-lg border border-[var(--line)] bg-[var(--surf)] px-2 py-1.5 text-sm" value={st?.id ?? ""} onChange={(e) => setSel(e.target.value)}>
+    <div className="grid gap-4 xl:grid-cols-5">
+      <div className="card xl:col-span-2">
+        <h3 className="card-title mb-3">Payout statement</h3>
+        <select aria-label="Device" className="input mb-4" value={st?.id ?? ""} onChange={(e) => setSel(e.target.value)}>
           {groups.map(([k, label]) => {
             const opts = s.devices.filter((d) => d.kind === k);
             return opts.length ? <optgroup key={k} label={label}>{opts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</optgroup> : null;
@@ -498,32 +582,32 @@ function Contributors({ s }: { s: Snap }) {
         </select>
         {st && (
           <>
-            <p className="mb-2"><b>{st.name}</b> <span className={`pill ${pillFor(st.state)}`}>{st.state.replace("_", " ")}</span><br />
+            <p className="mb-3"><span className="flex items-center gap-2"><b className="text-[15px] font-semibold">{st.name}</b> <Status s={st.state} /></span>
               <span className="text-xs text-[var(--mut)]">{st.label} · {st.cores} cores · ~{st.watts} W under load · joined {st.joined}</span></p>
-            <dl className="grid grid-cols-[1fr_auto] gap-y-1 text-sm">
+            <dl className="grid grid-cols-[1fr_auto] gap-y-2 text-[13px]">
               {([["Tasks finished", String(st.done)], ["Hours worked", `${st.hours.toFixed(2)} h`], ["Customers paid for this device's work", sgd(st.gross, 3)],
                 [`Nightshift fee (${pct(s.cfg.take_rate)})`, sgd(-st.fees, 3)], ["Payout", sgd(st.earned, 3)],
-                [`Electricity (S$${s.cfg.electricity}/kWh)`, sgd(-st.electricity, 3)]] as [string, string][]).map(([l, v]) => (
-                <div key={l} className="contents"><dt>{l}</dt><dd className="text-right font-mono">{v}</dd></div>
+                [`Electricity (S$${s.cfg.electricity.toFixed(2)}/kWh)`, sgd(-st.electricity, 3)]] as [string, string][]).map(([l, v]) => (
+                <div key={l} className="contents"><dt>{l}</dt><dd className="text-right tabular-nums">{v}</dd></div>
               ))}
-              <dt className="border-t border-[var(--line)] pt-1 font-bold">Net to contributor</dt>
-              <dd className={`border-t border-[var(--line)] pt-1 text-right font-mono font-bold ${st.net < 0 ? "text-[var(--bad)]" : ""}`}>{sgd(st.net, 3)}</dd>
-              <dt className="text-[var(--mut)]">Projected per month</dt><dd className="text-right font-mono text-[var(--mut)]">{sgd(st.net_per_month)}</dd>
-              <dt className="text-[var(--mut)]">Reliability score</dt><dd className="text-right font-mono text-[var(--mut)]">{st.reliability}/100</dd>
+              <dt className="border-t border-[var(--line)] pt-1 font-semibold">Net to contributor</dt>
+              <dd className={`border-t border-[var(--line)] pt-1 text-right tabular-nums font-semibold ${st.net < 0 ? "text-[var(--bad)]" : ""}`}>{sgd(st.net, 3)}</dd>
+              <dt className="text-[var(--mut)]">Projected per month</dt><dd className="text-right tabular-nums text-[var(--mut)]">{sgd(st.net_per_month)}</dd>
+              <dt className="text-[var(--mut)]">Reliability score</dt><dd className="text-right tabular-nums text-[var(--mut)]">{st.reliability}/100</dd>
             </dl>
           </>
         )}
       </div>
-      <div className="card">
-        <h3 className="mb-2 text-sm font-semibold">Top earners</h3>
+      <div className="card xl:col-span-3">
+        <h3 className="card-title mb-3">Top earners</h3>
         <div className="overflow-x-auto">
-          <table className="w-full whitespace-nowrap text-sm">
-            <thead><tr className="text-left text-xs text-[var(--mut)]"><th className="py-1">Device</th><th>State</th><th className="text-right">Tasks</th><th className="text-right">Payout</th><th className="text-right">Net / month</th></tr></thead>
+          <table className="table table-sm whitespace-nowrap">
+            <thead><tr><th>Device</th><th>State</th><th className="text-right">Tasks</th><th className="text-right">Payout</th><th className="text-right">Net / month</th></tr></thead>
             <tbody>{s.devices.slice(0, 25).map((d) => (
-              <tr key={d.id} className={`border-t border-[var(--line)] ${d.kind === "live" ? "bg-[color-mix(in_srgb,var(--idle)_9%,transparent)]" : ""}`}>
-                <td className="py-1.5 pr-2">{d.name}</td><td><span className={`pill ${pillFor(d.state)}`}>{d.state.replace("_", " ")}</span></td>
-                <td className="text-right font-mono">{d.done}</td><td className="text-right font-mono">{sgd(d.earned, 3)}</td>
-                <td className={`text-right font-mono ${d.net_per_month < 0 ? "text-[var(--bad)]" : ""}`}>{sgd(d.net_per_month)}</td>
+              <tr key={d.id} className={`${d.kind === "live" ? "bg-[color-mix(in_srgb,var(--idle)_9%,transparent)]" : ""}`}>
+                <td>{d.name}</td><td><Status s={d.state} /></td>
+                <td className="text-right tabular-nums">{d.done}</td><td className="text-right tabular-nums">{sgd(d.earned, 3)}</td>
+                <td className={`text-right tabular-nums ${d.net_per_month < 0 ? "text-[var(--bad)]" : ""}`}>{sgd(d.net_per_month)}</td>
               </tr>
             ))}</tbody>
           </table>
@@ -549,16 +633,30 @@ function Trust({ s }: { s: Snap }) {
         { v: String(suspended.length), l: "Devices suspended" },
       ]} />
       <div className="grid gap-3 lg:grid-cols-2">
-        <div className="card text-sm">
-          <h3 className="mb-2 text-sm font-semibold">How results are checked</h3>
-          <p>Every device&apos;s first results are rerun on another idle device, then a random share after that. A wrong result suspends the device without pay, and the task is rerun elsewhere. Checking more catches cheats sooner but costs more. Try the <b>Lean verification</b> scenario to see bad results slip through.</p>
+        <div className="card">
+          <h3 className="card-title mb-4">How results are checked</h3>
+          <ol className="flex flex-col gap-4">
+            {([
+              ["Recheck new devices", `Each device's first ${s.cfg.verify_first_n} results are rerun on another idle device.`],
+              ["Spot-check everyone", `After that, ${pct(s.cfg.verify_share)} of results are picked at random and rerun.`],
+              ["Suspend on a mismatch", "A wrong result suspends the device without pay, and the task is rerun elsewhere."],
+            ] as [string, string][]).map(([t, d], i) => (
+              <li key={t} className="flex gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--idle)_14%,transparent)] text-xs font-semibold text-[var(--idle)]">{i + 1}</span>
+                <div><p className="text-[13px] font-medium">{t}</p><p className="text-[13px] text-[var(--mut)]">{d}</p></div>
+              </li>
+            ))}
+          </ol>
+          <p className="mt-5 rounded-lg bg-[var(--bg)] px-3 py-2.5 text-xs text-[var(--mut)]">
+            Checking more catches cheats sooner but costs more. Try the <b className="text-[var(--ink)]">Lean verification</b> scenario to see bad results slip through.
+          </p>
         </div>
         <div className="card">
-          <h3 className="mb-2 text-sm font-semibold">Least reliable active devices</h3>
-          <table className="w-full text-sm">
-            <thead><tr className="text-left text-xs text-[var(--mut)]"><th className="py-1">Device</th><th className="text-right">Score</th><th className="text-right">Finished</th><th className="text-right">Interrupted</th></tr></thead>
+          <h3 className="card-title mb-3">Least reliable active devices</h3>
+          <table className="table table-sm">
+            <thead><tr><th>Device</th><th className="text-right">Score</th><th className="text-right">Finished</th><th className="text-right">Interrupted</th></tr></thead>
             <tbody>
-              {shaky.map((d) => <tr key={d.id} className="border-t border-[var(--line)]"><td className="py-1.5">{d.name}</td><td className="text-right font-mono">{d.reliability}</td><td className="text-right font-mono">{d.done}</td><td className="text-right font-mono">{d.preempted}</td></tr>)}
+              {shaky.map((d) => <tr key={d.id}><td>{d.name}</td><td className="text-right tabular-nums">{d.reliability}</td><td className="text-right tabular-nums">{d.done}</td><td className="text-right tabular-nums">{d.preempted}</td></tr>)}
               {!shaky.length && <tr><td colSpan={4} className="py-4 text-center text-[var(--mut)]">No devices have worked yet.</td></tr>}
             </tbody>
           </table>
@@ -585,10 +683,10 @@ function Report({ s, m }: { s: Snap; m: Market }) {
   return (
     <>
       <div className="card print:hidden">
-        <h3 className="mb-2 text-sm font-semibold">Save and export</h3>
+        <h3 className="card-title mb-3">Save and export</h3>
         <div className="flex flex-wrap items-end gap-2">
-          <label className="flex-1 text-xs text-[var(--mut)]">Run name
-            <input className="mt-1 w-full rounded-lg border border-[var(--line)] bg-[var(--surf)] px-2 py-1.5 text-sm" placeholder="e.g. 200 devices, premium GPU"
+          <label className="flex-1 text-xs font-medium text-[var(--mut)]">Run name
+            <input className={INPUT} placeholder="e.g. 200 devices, premium GPU"
               value={label} maxLength={80} onChange={(e) => setLabel(e.target.value)} /></label>
           <button className={BTN_PRIMARY} onClick={() => {
             const next = [m.summary(label), ...runs].slice(0, 20);
@@ -602,7 +700,7 @@ function Report({ s, m }: { s: Snap; m: Market }) {
         </div>
       </div>
       <div className="card">
-        <h3 className="text-base font-bold">Nightshift market: run report</h3>
+        <h2 className="text-base font-semibold tracking-tight">Nightshift market: run report</h2>
         <p className="mb-3 text-xs text-[var(--mut)]">{SCENARIOS[s.scenario]?.label ?? "Custom"} · {s.days.toFixed(1)} simulated days · {k.devices} devices · simulated data, no real money</p>
         <Kpis items={[
           { v: sgd(k.revenue), l: "Customers paid" }, { v: sgd(k.payouts), l: "Paid to contributors" },
@@ -612,18 +710,18 @@ function Report({ s, m }: { s: Snap; m: Market }) {
         ]} />
         <div className="mt-4 grid gap-6 text-sm md:grid-cols-3">
           <div><h4 className="mb-1 text-xs font-semibold text-[var(--mut)]">Where the money went</h4>
-            <dl className="grid grid-cols-[1fr_auto] gap-y-1">{rows.map(([l, v]) => <div key={l} className="contents"><dt>{l}</dt><dd className="text-right font-mono">{v}</dd></div>)}
-              <dt className="border-t border-[var(--line)] pt-1 font-bold">Nightshift profit</dt><dd className="border-t border-[var(--line)] pt-1 text-right font-mono font-bold">{sgd(k.profit)}</dd></dl></div>
+            <dl className="grid grid-cols-[1fr_auto] gap-y-1">{rows.map(([l, v]) => <div key={l} className="contents"><dt>{l}</dt><dd className="text-right tabular-nums">{v}</dd></div>)}
+              <dt className="border-t border-[var(--line)] pt-1 font-semibold">Nightshift profit</dt><dd className="border-t border-[var(--line)] pt-1 text-right tabular-nums font-semibold">{sgd(k.profit)}</dd></dl></div>
           <div><h4 className="mb-1 text-xs font-semibold text-[var(--mut)]">Customers by spend</h4>
             <dl className="grid grid-cols-[1fr_auto] gap-y-1">{[...s.buyers].filter((b) => b.orders || b.declined).sort((a, b) => b.spent - a.spent).map((b) => (
-              <div key={b.name} className="contents"><dt>{b.name} <span className="text-xs text-[var(--mut)]">{b.delivered - b.late}/{b.delivered} on time{b.declined ? `, ${b.declined} declined` : ""}</span></dt><dd className="text-right font-mono">{sgd(b.spent)}</dd></div>
+              <div key={b.name} className="contents"><dt>{b.name} <span className="text-xs text-[var(--mut)]">{b.delivered - b.late}/{b.delivered} on time{b.declined ? `, ${b.declined} declined` : ""}</span></dt><dd className="text-right tabular-nums">{sgd(b.spent)}</dd></div>
             ))}</dl></div>
           <div><h4 className="mb-1 text-xs font-semibold text-[var(--mut)]">Contributors (net per month) and assumptions</h4>
             <dl className="grid grid-cols-[1fr_auto] gap-y-1">
-              {s.classes.map((x) => <div key={x.cls} className="contents"><dt>{x.label} ({x.count})</dt><dd className="text-right font-mono">{sgd(x.net_per_month)}</dd></div>)}
-              <dt className="border-t border-[var(--line)] pt-1">Nightshift&apos;s cut</dt><dd className="border-t border-[var(--line)] pt-1 text-right font-mono">{pct(c.take_rate)}</dd>
-              <dt>CPU / GPU price</dt><dd className="text-right font-mono">S${c.cpu_price} · S${c.gpu_price}</dd>
-              <dt>Results rechecked</dt><dd className="text-right font-mono">{pct(c.verify_share)} + first {c.verify_first_n}</dd>
+              {s.classes.map((x) => <div key={x.cls} className="contents"><dt>{x.label} ({x.count})</dt><dd className="text-right tabular-nums">{sgd(x.net_per_month)}</dd></div>)}
+              <dt className="border-t border-[var(--line)] pt-1">Nightshift&apos;s cut</dt><dd className="border-t border-[var(--line)] pt-1 text-right tabular-nums">{pct(c.take_rate)}</dd>
+              <dt>CPU / GPU price</dt><dd className="text-right tabular-nums">S${c.cpu_price} · S${c.gpu_price}</dd>
+              <dt>Results rechecked</dt><dd className="text-right tabular-nums">{pct(c.verify_share)} + first {c.verify_first_n}</dd>
             </dl></div>
         </div>
         <div className="mt-4 grid gap-3 lg:grid-cols-2">
@@ -632,16 +730,16 @@ function Report({ s, m }: { s: Snap; m: Market }) {
         </div>
       </div>
       <div className="card print:hidden">
-        <h3 className="mb-2 text-sm font-semibold">Saved runs <span className="text-xs font-normal text-[var(--mut)]">(stored in this browser)</span></h3>
+        <h3 className="card-title mb-3">Saved runs <span className="text-xs font-normal text-[var(--mut)]">(stored in this browser)</span></h3>
         <div className="overflow-x-auto">
-          <table className="w-full whitespace-nowrap text-sm">
-            <thead><tr className="text-left text-xs text-[var(--mut)]"><th className="py-1">Run</th><th className="text-right">Sim days</th><th className="text-right">Devices</th><th className="text-right">Customers paid</th><th className="text-right">Profit</th><th className="text-right">Margin</th><th className="text-right">Profit / month</th></tr></thead>
+          <table className="table table-sm whitespace-nowrap">
+            <thead><tr><th>Run</th><th className="text-right">Sim days</th><th className="text-right">Devices</th><th className="text-right">Customers paid</th><th className="text-right">Profit</th><th className="text-right">Margin</th><th className="text-right">Profit / month</th></tr></thead>
             <tbody>
               {runs.map((r, i) => (
-                <tr key={i} className="border-t border-[var(--line)]"><td className="py-1.5">{r.label}</td><td className="text-right font-mono">{r.sim_days}</td>
-                  <td className="text-right font-mono">{r.kpi.devices}</td><td className="text-right font-mono">{sgd(r.kpi.revenue)}</td>
-                  <td className="text-right font-mono">{sgd(r.kpi.profit)}</td><td className="text-right font-mono">{pct(r.kpi.margin)}</td>
-                  <td className="text-right font-mono">{sgd(r.kpi.profit_per_month, 0)}</td></tr>
+                <tr key={i}><td>{r.label}</td><td className="text-right tabular-nums">{r.sim_days}</td>
+                  <td className="text-right tabular-nums">{r.kpi.devices}</td><td className="text-right tabular-nums">{sgd(r.kpi.revenue)}</td>
+                  <td className="text-right tabular-nums">{sgd(r.kpi.profit)}</td><td className="text-right tabular-nums">{pct(r.kpi.margin)}</td>
+                  <td className="text-right tabular-nums">{sgd(r.kpi.profit_per_month, 0)}</td></tr>
               ))}
               {!runs.length && <tr><td colSpan={7} className="py-4 text-center text-[var(--mut)]">No saved runs yet. Save one to compare scenarios.</td></tr>}
             </tbody>

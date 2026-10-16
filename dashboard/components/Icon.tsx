@@ -22,6 +22,11 @@ const PATHS = {
   alert: "M12 3l10 18H2zM12 10v4M12 18h.01",
   menu: "M4 6h16M4 12h16M4 18h16",
   x: "M6 6l12 12M18 6L6 18",
+  moon: "M20 14.5A8 8 0 1 1 9.5 4 6.5 6.5 0 0 0 20 14.5z",
+  sun: "M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4",
+  play: "M7 4v16l13-8z",
+  pause: "M7 4h4v16H7zM13 4h4v16h-4z",
+  reset: "M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5",
 } as const;
 
 export type IconName = keyof typeof PATHS;
