@@ -6,8 +6,7 @@ export type SessionRow = {
 
 // 48 half-hour cells covering the last 24 hours, classed for the .strip
 // component ported from idle-compute-mockups.html ("u" = in use, "d" = idle).
-export function buildDayStrip(sessions: SessionRow[]): string[] {
-  const now = Date.now();
+export function buildDayStrip(sessions: SessionRow[], now: number): string[] {
   const windowStart = now - 24 * 60 * 60 * 1000;
   const cellMs = (24 * 60 * 60 * 1000) / 48;
 

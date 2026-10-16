@@ -1,7 +1,5 @@
+import PageSkeleton from "@/components/PageSkeleton";
+
 export default function Loading() {
-  return (
-    <div className="flex min-h-[40vh] items-center justify-center text-sm text-[var(--mut)]">
-      Loading fleet data...
-    </div>
-  );
+  return <PageSkeleton kpis={4} blocks={["h-72", "h-56"]} />;
 }

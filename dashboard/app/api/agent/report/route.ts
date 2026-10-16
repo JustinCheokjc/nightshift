@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { readDeviceToken } from "@/lib/agentAuth";
+import { sgDate } from "@/lib/time";
 
 // Agent readings, sent every minute (or in a batch after being offline).
 // The server decides "usable idle" from the device's settings, so changing
@@ -135,7 +136,7 @@ export async function POST(request: Request) {
     }
 
     const credit = Math.min(gap, 2 * interval * 1000) / 3600000;
-    const day = r.ts.slice(0, 10);
+    const day = sgDate(t); // Singapore calendar day
     const sum = perDay.get(day) ?? { idle: 0, up: 0 };
     sum.up += credit;
     if (kind === "usable_idle") sum.idle += credit;

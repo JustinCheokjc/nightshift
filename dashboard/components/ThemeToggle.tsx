@@ -1,34 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "nightshift-theme";
+const EVENT = "nightshift-theme";
+
+// The theme lives on <html data-theme> (set before paint by app/layout.tsx), so read it from there.
+function subscribe(cb: () => void) {
+  window.addEventListener(EVENT, cb);
+  return () => window.removeEventListener(EVENT, cb);
+}
+const read = () => (document.documentElement.dataset.theme === "light" ? "light" : "dark");
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<"light" | "dark" | null>(null);
-
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as "light" | "dark" | null;
-    if (stored) {
-      document.documentElement.dataset.theme = stored;
-      setTheme(stored);
-    } else {
-      setTheme("dark"); // the default set on <html> in app/layout.tsx
-    }
-  }, []);
+  const theme = useSyncExternalStore(subscribe, read, () => "dark" as const);
 
   function toggle() {
     const next = theme === "dark" ? "light" : "dark";
     document.documentElement.dataset.theme = next;
-    localStorage.setItem(STORAGE_KEY, next);
-    setTheme(next);
+    try { localStorage.setItem(STORAGE_KEY, next); } catch {}
+    window.dispatchEvent(new Event(EVENT));
   }
 
   return (
     <button
       onClick={toggle}
-      aria-label="Toggle light and dark mode"
-      className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--line)]"
+      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--line)] hover:bg-[var(--surf)]"
     >
       {theme === "dark" ? (
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4 6.5 6.5 0 0 0 20 14.5z" /></svg>

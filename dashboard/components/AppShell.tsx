@@ -22,13 +22,15 @@ function LogoMark() {
 }
 
 /** Sidebar + top bar layout shared by the contributor and operator dashboards. */
-export default function AppShell({ area, groups, email, role, activity, children }: {
+export default function AppShell({ area, groups, email, role, activity, children, demo = false }: {
   area: string;
   groups: NavGroup[];
   email: string;
   role: string;
   activity: ActivityEvent[];
   children: React.ReactNode;
+  /** Public demo: sample data, no account. Shows a banner and a sign-in button instead of the account menu. */
+  demo?: boolean;
 }) {
   const initial = (email[0] ?? "?").toUpperCase();
 
@@ -42,7 +44,12 @@ export default function AppShell({ area, groups, email, role, activity, children
     </a>
   );
 
-  const footer = (
+  const footer = demo ? (
+    <div className="flex flex-col gap-2 p-1">
+      <p className="text-xs text-[var(--mut)]">You&apos;re exploring a demo with sample data.</p>
+      <a href="/login" className="btn btn-primary w-full">Sign in</a>
+    </div>
+  ) : (
     <div className="flex items-center gap-2.5 rounded-lg px-1.5 py-1">
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--idle)_16%,transparent)] text-xs font-semibold text-[var(--idle)]">
         {initial}
@@ -62,6 +69,12 @@ export default function AppShell({ area, groups, email, role, activity, children
   return (
     <div className="min-h-screen w-full">
       <div className="lg:pl-60">
+        {demo && (
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-b border-[color-mix(in_srgb,var(--idle)_35%,var(--line))] bg-[color-mix(in_srgb,var(--idle)_10%,var(--bg))] px-5 py-2 text-center text-[13px]">
+            <span><b className="font-semibold">Live demo</b> · sample devices and data, refreshed every visit. Nothing you do here is saved.</span>
+            <a href="/login" className="font-medium text-[var(--idle)] underline-offset-2 hover:underline">Sign in to use your own laptop →</a>
+          </div>
+        )}
         {/* No backdrop-filter here: it would trap the fixed sidebar inside the header. */}
         <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-[var(--bg)]">
           <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-5 lg:px-8">
@@ -71,7 +84,7 @@ export default function AppShell({ area, groups, email, role, activity, children
               <Icon name="chevron" size={14} className="hidden text-[var(--mut)] sm:inline" />
               <PageTitle groups={groups} />
             </div>
-            <span className="badge warn hidden md:inline-flex" title="Early-stage pilot. Earnings are estimates.">Pilot</span>
+            <span className="badge warn hidden md:inline-flex" title={demo ? "Sample data" : "Early-stage pilot. Earnings are estimates."}>{demo ? "Demo" : "Pilot"}</span>
             <ActivityBell events={activity} />
             <ThemeToggle />
           </div>

@@ -191,11 +191,16 @@ function LoginForm() {
                 Passwordless sign-in. Each link works once.
               </p>
 
-              <div className="mt-8 border-t border-[var(--line)] pt-6 text-center text-sm text-[var(--mut)]">
-                New to Nightshift?{" "}
-                <a href={`${SITE}/join/`} className="font-medium text-[var(--idle)] underline-offset-4 hover:underline">
-                  Join the pilot
+              <div className="mt-8 flex flex-col gap-3 border-t border-[var(--line)] pt-6 text-center text-sm text-[var(--mut)]">
+                <a href="/demo" className="btn h-10 w-full">
+                  Explore the live demo, no sign-in needed
                 </a>
+                <span>
+                  New to Nightshift?{" "}
+                  <a href={`${SITE}/join/`} className="font-medium text-[var(--idle)] underline-offset-4 hover:underline">
+                    Join the pilot
+                  </a>
+                </span>
               </div>
             </div>
           )}

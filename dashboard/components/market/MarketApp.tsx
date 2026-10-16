@@ -58,7 +58,7 @@ function download(name: string, rows: Record<string, unknown>[]) {
 }
 
 // ======================================================================
-export default function MarketApp({ userId }: { userId: string }) {
+export default function MarketApp({ userId }: { userId?: string }) {
   const market = useRef<Market | null>(null); // for effects
   const [m, setMarket] = useState<Market | null>(null); // for rendering
   const [snap, setSnap] = useState<Snap | null>(null);
@@ -80,6 +80,7 @@ export default function MarketApp({ userId }: { userId: string }) {
 
   // The viewer's enrolled devices join the market with their real idle status.
   useEffect(() => {
+    if (!userId) return; // public demo: simulated devices only
     const supabase = createClient();
     let stop = false;
     async function sync() {
@@ -543,7 +544,23 @@ function Customers({ s, m, refresh }: { s: Snap; m: Market; refresh: () => void 
             <button className={BTN} onClick={() => download("nightshift-market-invoices.csv", m.invoices())}>Export CSV</button>
           </span>
         </div>
-        <div className="overflow-x-auto">
+        {/* Phones: one row per invoice instead of a 10-column table */}
+        <ul className="flex flex-col divide-y divide-[var(--line)] md:hidden">
+          {invoices.map((o) => (
+            <li key={o.id} className="flex items-center justify-between gap-3 py-3 first:pt-0">
+              <div className="min-w-0">
+                <p className="truncate text-[13px] font-medium">{o.buyer}</p>
+                <p className="text-xs text-[var(--mut)]">{o.id} · {o.hours} h · placed {o.created}</p>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <b className="text-[13px] font-semibold tabular-nums">{sgd(o.price - o.refund, 3)}</b>
+                <Status s={o.overdue ? "overdue" : o.status} />
+              </div>
+            </li>
+          ))}
+          {!invoices.length && <li className="py-6 text-center text-sm text-[var(--mut)]">No orders yet.</li>}
+        </ul>
+        <div className="hidden overflow-x-auto md:block">
           <table className="table table-sm whitespace-nowrap">
             <thead><tr>{["Order", "Customer", "Placed", "Delivered", "Hours", "Unit price", "Price", "Refund", "Net", "Status"].map((h, i) => <th key={h} className={`${i >= 4 && i <= 8 ? "text-right" : ""}`}>{h}</th>)}</tr></thead>
             <tbody>

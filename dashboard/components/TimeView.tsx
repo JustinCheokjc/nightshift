@@ -7,7 +7,7 @@ type Summary = { device_id: string; date: string; usable_idle_hours: number; cor
 type DeviceInfo = { id: string; name: string; enrolled_at: string };
 
 // Per day: usable idle (from the agent), in use = on but not usable idle,
-// asleep or off = the rest of the day. Days are UTC, matching the agent.
+// asleep or off = the rest of the day. Days are Singapore days, matching the agent (rows before 16 Oct 2026 used UTC days).
 function splitDay(rows: Summary[], date: string, today: string, hoursSoFarToday: number) {
   const idle = rows.reduce((a, r) => a + Number(r.usable_idle_hours), 0);
   const up = rows.reduce((a, r) => a + Number(r.uptime_hours), 0);
@@ -129,7 +129,7 @@ export default function TimeView({ devices, summaries, today, hoursSoFarToday, r
       ) : (
         <p className="py-8 text-center text-sm text-[var(--mut)]">No tracked time in this range yet. Time appears here once a device&apos;s agent starts reporting.</p>
       )}
-      <p className="mt-2 text-xs text-[var(--mut)]">Screen time is time the device was on but not idle: in use, on battery or busy. Only time while the agent was running is counted; days are in UTC.</p>
+      <p className="mt-2 text-xs text-[var(--mut)]">Screen time is time the device was on but not idle: in use, on battery or busy. Only time while the agent was running is counted; days are in Singapore time.</p>
     </div>
   );
 }

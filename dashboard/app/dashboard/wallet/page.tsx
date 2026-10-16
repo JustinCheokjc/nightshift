@@ -5,6 +5,7 @@ import SimWallet from "@/components/SimWallet";
 import Reveal from "@/components/Reveal";
 import Pager from "@/components/Pager";
 import PageHeader from "@/components/PageHeader";
+import { since30Days } from "@/lib/time";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "Pending",
@@ -14,6 +15,8 @@ const STATUS_LABEL: Record<string, string> = {
   reversed: "Reversed",
 };
 
+const STATUS_TONE: Record<string, string> = { pending: "warn", available: "ok", processing: "warn", paid: "", reversed: "bad" };
+
 const TYPE_LABEL: Record<string, string> = {
   pilot_payment: "Pilot completion payment",
   uptime_bonus: "Uptime bonus",
@@ -22,9 +25,6 @@ const TYPE_LABEL: Record<string, string> = {
 
 const PAGE_SIZE = 10;
 
-function daysAgo(n: number) {
-  return new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
-}
 
 export default async function WalletPage({
   searchParams,
@@ -37,7 +37,7 @@ export default async function WalletPage({
   const page = Math.max(1, Number(pageParam) || 1);
   const offset = (page - 1) * PAGE_SIZE;
 
-  const since = daysAgo(30);
+  const since = since30Days();
   const { data: devices } = await supabase
     .from("devices")
     .select("id,name,cores")
@@ -99,49 +99,32 @@ export default async function WalletPage({
 
       {(rows.length > 0 || page > 1) && (
       <Reveal className="card">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="card-head">
           <div>
-            <h3 className="text-sm font-semibold">Pilot payments</h3>
-            <p className="text-xs text-[var(--mut)]">
+            <h3 className="card-title">Pilot payments</h3>
+            <p className="card-sub">
               Recorded ledger: {"S$" + available.toFixed(2)} available, {"S$" + pending.toFixed(2)} pending, {"S$" + paid.toFixed(2)} paid.
             </p>
           </div>
           {rows.length > 0 && (
             <a
               href="/dashboard/wallet/export"
-              className="rounded-lg border border-[var(--line)] px-3 py-1 text-xs"
+              className="btn btn-sm"
             >
               Export CSV
             </a>
           )}
         </div>
         <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-[var(--mut)]">
-                  <th className="border-b border-[var(--line)] py-2 font-medium">
-                    Entry
-                  </th>
-                  <th className="border-b border-[var(--line)] py-2 font-medium">
-                    Amount
-                  </th>
-                  <th className="border-b border-[var(--line)] py-2 font-medium">
-                    Status
-                  </th>
-                </tr>
-              </thead>
+            <table className="table table-sm">
+              <thead><tr><th>Entry</th><th>Date</th><th className="text-right">Amount</th><th>Status</th></tr></thead>
               <tbody>
                 {rows.map((entry) => (
                   <tr key={entry.id}>
-                    <td className="border-b border-[var(--line)] py-2">
-                      {TYPE_LABEL[entry.type] ?? entry.type}
-                    </td>
-                    <td className="border-b border-[var(--line)] py-2">
-                      S${Number(entry.amount).toFixed(2)}
-                    </td>
-                    <td className="border-b border-[var(--line)] py-2">
-                      {STATUS_LABEL[entry.status] ?? entry.status}
-                    </td>
+                    <td>{TYPE_LABEL[entry.type] ?? entry.type}</td>
+                    <td className="text-[var(--mut)]">{new Date(entry.created_at).toLocaleDateString("en-SG", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Singapore" })}</td>
+                    <td className="text-right tabular-nums">S${Number(entry.amount).toFixed(2)}</td>
+                    <td><span className={`badge ${STATUS_TONE[entry.status] ?? ""}`}>{STATUS_LABEL[entry.status] ?? entry.status}</span></td>
                   </tr>
                 ))}
               </tbody>

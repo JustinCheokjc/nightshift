@@ -11,7 +11,7 @@ export async function toggleDevicePause(deviceId: string, paused: boolean) {
     .from("devices")
     .update({ status: paused ? "offline" : "idle" })
     .eq("id", deviceId);
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout"); // includes device pages
 }
 
 export async function updateIdleThreshold(deviceId: string, formData: FormData) {
@@ -29,7 +29,7 @@ export async function updateIdleThreshold(deviceId: string, formData: FormData) 
     // Before migration 0005 there is no seconds column; keep whole minutes.
     await supabase.from("device_settings").update({ idle_threshold_min: minutes }).eq("device_id", deviceId);
   }
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout"); // includes device pages
 }
 
 export async function updateElectricityRate(formData: FormData) {
