@@ -13,11 +13,7 @@ export default function ThemeToggle() {
       document.documentElement.dataset.theme = stored;
       setTheme(stored);
     } else {
-      setTheme(
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light"
-      );
+      setTheme("dark"); // the default set on <html> in app/layout.tsx
     }
   }, []);
 
