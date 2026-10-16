@@ -67,14 +67,216 @@ body {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Schibsted Grotesk", Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-feature-settings: "cv11", "ss01";
 }
 
+/* Component classes live in the components layer so Tailwind utilities
+   (lg:hidden, px-2, border-transparent...) can still override them. */
+@layer components {
+/* ---- Surfaces ---- */
 .card {
   background: var(--surf);
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 2px rgb(16 40 48 / 0.04);
+}
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.card-sub {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--mut);
+}
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+
+/* ---- Controls ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surf);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
+}
+.btn:hover {
+  background: var(--bg);
+}
+.btn:focus-visible,
+.input:focus-visible {
+  outline: 2px solid var(--idle);
+  outline-offset: 2px;
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.btn-sm {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+.btn-primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+.btn-primary:hover {
+  background: var(--ink);
+  opacity: 0.88;
+}
+.btn-danger {
+  color: var(--bad);
+  border-color: color-mix(in srgb, var(--bad) 45%, var(--line));
+}
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--bad) 8%, transparent);
+}
+.btn-danger-solid {
+  background: var(--bad);
+  border-color: var(--bad);
+  color: #fff;
+}
+.btn-danger-solid:hover {
+  background: var(--bad);
+  opacity: 0.88;
+}
+.input {
+  height: 32px;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surf);
+  padding: 0 10px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mut);
+}
+
+/* ---- Status badges ---- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--mut) 12%, transparent);
+  color: var(--mut);
+}
+.badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: currentColor;
+}
+.badge.ok {
+  background: color-mix(in srgb, var(--idle) 14%, transparent);
+  color: var(--idle);
+}
+.badge.warn {
+  background: color-mix(in srgb, var(--amber) 14%, transparent);
+  color: var(--amber);
+}
+.badge.bad {
+  background: color-mix(in srgb, var(--bad) 14%, transparent);
+  color: var(--bad);
+}
+.badge.live::before {
+  animation: pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 55%, transparent); }
+  50% { box-shadow: 0 0 0 4px transparent; }
+}
+
+/* ---- Tables ---- */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.table th {
+  padding: 0 12px 10px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mut);
+  border-bottom: 1px solid var(--line);
+}
+.table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.table tr:last-child td {
+  border-bottom: 0;
+}
+.table th:first-child,
+.table td:first-child {
+  padding-left: 0;
+}
+.table th:last-child,
+.table td:last-child {
+  padding-right: 0;
+}
+
+/* ---- Loading skeleton ---- */
+.skeleton {
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--sleep) 0%, var(--surf) 50%, var(--sleep) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  .badge.live::before {
+    animation: none;
+  }
+}
+
 }
 
 .pill {
@@ -99,11 +301,14 @@ body {
 
 .strip {
   display: flex;
-  height: 16px;
+  height: 20px;
   border-radius: 4px;
   overflow: hidden;
   min-width: 240px;
-  gap: 1px;
+  gap: 2px;
+}
+.strip i {
+  border-radius: 2px;
 }
 .strip i {
   flex: 1;

@@ -57,7 +57,7 @@ export default function ActivityBell({ events }: { events: ActivityEvent[] }) {
       </button>
       {open && (
         <div className="absolute right-0 top-full z-40 mt-2 w-80 rounded-xl border border-[var(--line)] bg-[var(--surf)] shadow-xl">
-          <div className="border-b border-[var(--line)] px-4 py-2 text-sm font-bold">
+          <div className="border-b border-[var(--line)] px-4 py-2 text-sm font-semibold">
             Activity
           </div>
           <ul className="max-h-80 overflow-y-auto">

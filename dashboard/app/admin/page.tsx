@@ -5,6 +5,7 @@ import Reveal from "@/components/Reveal";
 import ForecastChart from "@/components/ForecastChart";
 import HardwareMixChart from "@/components/HardwareMixChart";
 import EconomicsPanel from "@/components/EconomicsPanel";
+import PageHeader from "@/components/PageHeader";
 
 export default async function OperatorPage() {
   const supabase = await createClient();
@@ -35,13 +36,7 @@ export default async function OperatorPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-xl font-bold">Fleet</h2>
-        <p className="text-sm text-[var(--mut)]">
-          Answers one question: how many usable core-hours can we promise a
-          buyer?
-        </p>
-      </div>
+      <PageHeader title="Fleet" description="Answers one question: how many usable core-hours can we promise a buyer?" />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Kpi value={devicesEnrolled} label="Devices enrolled" />
@@ -52,7 +47,7 @@ export default async function OperatorPage() {
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Reveal className="card">
-          <h3 className="mb-3 text-sm font-bold">
+          <h3 className="mb-3 text-sm font-semibold">
             Forecast: usable devices by hour of day
           </h3>
           {!rows.length ? (
@@ -72,7 +67,7 @@ export default async function OperatorPage() {
         </Reveal>
 
         <Reveal delay={0.08} className="card">
-          <h3 className="mb-3 text-sm font-bold">Hardware mix</h3>
+          <h3 className="mb-3 text-sm font-semibold">Hardware mix</h3>
           {!hardwareMixData.length ? (
             <p className="text-sm text-[var(--mut)]">No devices enrolled yet.</p>
           ) : (
@@ -86,7 +81,7 @@ export default async function OperatorPage() {
       </Reveal>
 
       <Reveal delay={0.16} className="card">
-        <h3 className="mb-3 text-sm font-bold">Attention</h3>
+        <h3 className="mb-3 text-sm font-semibold">Attention</h3>
         {offlineCount ? (
           <p className="text-sm">
             <span className="pill w">{offlineCount} devices</span> paused or

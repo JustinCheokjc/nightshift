@@ -338,7 +338,7 @@ export default function SimWallet({
       {/* Simulation controls */}
       <div className="card flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-bold">Try it out</h3>
+          <h3 className="text-sm font-semibold">Try it out</h3>
           <p className="text-xs text-[var(--mut)]">
             {store.offsetDays > 0 ? `Simulated clock is ${store.offsetDays} days ahead. ` : ""}
             Add a night of idle time, or jump forward so pending earnings clear.
@@ -354,7 +354,7 @@ export default function SimWallet({
       {/* Earnings chart */}
       <div className="card">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-bold">Daily earnings, last 30 days</h3>
+          <h3 className="text-sm font-semibold">Daily earnings, last 30 days</h3>
           <div className="flex gap-4 text-xs text-[var(--mut)]">
             <span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-[var(--chart-avail)]" />Available</span>
             <span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-[var(--chart-pend)]" />Pending</span>
@@ -391,7 +391,7 @@ export default function SimWallet({
       <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         {/* Per-device */}
         <div className="card">
-          <h3 className="mb-3 text-sm font-bold">By device</h3>
+          <h3 className="mb-3 text-sm font-semibold">By device</h3>
           <ul className="flex flex-col gap-3">
             {perDevice.map((d) => (
               <li key={d.id} className="text-sm">
@@ -416,7 +416,7 @@ export default function SimWallet({
         {/* Activity */}
         <div className="card">
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-sm font-bold">Activity</h3>
+            <h3 className="text-sm font-semibold">Activity</h3>
             {activity.length > 0 && (
               <button type="button" onClick={exportCsv} className={BTN}>Export CSV</button>
             )}

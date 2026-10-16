@@ -2,6 +2,7 @@ import { getProfile } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import Reveal from "@/components/Reveal";
 import Pager from "@/components/Pager";
+import PageHeader from "@/components/PageHeader";
 
 const PAGE_SIZE = 10;
 
@@ -65,17 +66,13 @@ export default async function ContributorSecurityPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-xl font-bold">Security</h2>
-        <p className="text-sm text-[var(--mut)]">
-          The agent reports simple yes/no posture checks (never files or
-          browsing). Flagged devices are kept out of sensitive work until
-          fixed.
-        </p>
-      </div>
+      <PageHeader
+        title="Security"
+        description="The agent reports simple yes/no posture checks (never files or browsing). Flagged devices are kept out of sensitive work until fixed."
+      />
 
       <Reveal className="card">
-        <h3 className="mb-3 text-sm font-bold">Your flags</h3>
+        <h3 className="mb-3 text-sm font-semibold">Your flags</h3>
         {!openFlags.length ? (
           <p className="text-sm text-[var(--mut)]">
             No open flags on your devices.

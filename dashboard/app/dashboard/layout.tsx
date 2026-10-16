@@ -1,10 +1,7 @@
 import { getProfile } from "@/lib/dal";
-import { signOut } from "@/app/actions/auth";
 import { getContributorActivity } from "@/lib/activity";
-import NavTabs from "@/components/NavTabs";
-import PageTransition from "@/components/PageTransition";
-import ActivityBell from "@/components/ActivityBell";
-import ThemeToggle from "@/components/ThemeToggle";
+import AppShell from "@/components/AppShell";
+import type { NavGroup } from "@/components/SidebarNav";
 
 export default async function DashboardLayout({
   children,
@@ -15,47 +12,27 @@ export default async function DashboardLayout({
   const isAdmin = profile?.role === "admin";
   const activity = await getContributorActivity(profile!.id);
 
-  const tabs = [
-    { href: "/dashboard", label: "Devices" },
-    { href: "/dashboard/market", label: "Market" },
-    { href: "/dashboard/wallet", label: "Wallet" },
-    { href: "/dashboard/security", label: "Security" },
-    { href: "/dashboard/settings", label: "Settings" },
-    ...(isAdmin ? [{ href: "/admin", label: "Operator" }] : []),
+  const groups: NavGroup[] = [
+    {
+      items: [
+        { href: "/dashboard", label: "Devices", icon: "devices" },
+        { href: "/dashboard/market", label: "Market", icon: "market" },
+        { href: "/dashboard/wallet", label: "Wallet", icon: "wallet" },
+        { href: "/dashboard/security", label: "Security", icon: "shield" },
+      ],
+    },
+    {
+      label: "Account",
+      items: [
+        { href: "/dashboard/settings", label: "Settings", icon: "settings" },
+        ...(isAdmin ? [{ href: "/admin", label: "Operator console", icon: "fleet" as const }] : []),
+      ],
+    },
   ];
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-[var(--line)]">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-4">
-          <div>
-            <h1 className="text-lg font-bold">
-              <a href="https://nightshift-sg.vercel.app" className="hover:text-[var(--idle)]" title="Nightshift website">
-                Nightshift
-              </a>
-            </h1>
-            <p className="text-xs text-[var(--mut)]">
-              Contributor dashboard
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <NavTabs tabs={tabs} />
-            <ActivityBell events={activity} />
-            <ThemeToggle />
-            <form action={signOut}>
-              <button
-                type="submit"
-                className="ml-1 rounded-lg border border-[var(--line)] px-3 py-1.5 text-sm"
-              >
-                Sign out
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
-      <main className="mx-auto max-w-5xl px-5 py-8">
-        <PageTransition>{children}</PageTransition>
-      </main>
-    </div>
+    <AppShell area="Contributor" groups={groups} email={profile?.email ?? ""} role={profile?.role ?? "contributor"} activity={activity}>
+      {children}
+    </AppShell>
   );
 }

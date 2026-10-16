@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/dal";
 import Reveal from "@/components/Reveal";
 import { setUserRole } from "@/app/actions/admin";
+import PageHeader from "@/components/PageHeader";
 
 export default async function TeamPage() {
   const me = await getProfile();
@@ -14,13 +15,7 @@ export default async function TeamPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-xl font-bold">Team</h2>
-        <p className="text-sm text-[var(--mut)]">
-          Everyone who has signed in to Nightshift. Admins can see the
-          operator dashboard and manage the fleet.
-        </p>
-      </div>
+      <PageHeader title="Team" description="Everyone who has signed in to Nightshift. Admins can see the operator dashboard and manage the fleet." />
 
       <Reveal className="card">
         {!profiles?.length ? (

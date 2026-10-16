@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 type Summary = { device_id: string; date: string; usable_idle_hours: number; core_hours: number; uptime_hours: number };
@@ -21,8 +21,9 @@ function fmtHours(h: number) {
 }
 
 function themeColors() {
-  const cs = getComputedStyle(document.documentElement);
-  const get = (n: string, f: string) => cs.getPropertyValue(n).trim() || f;
+  // Server render has no DOM: fall back to the light-theme defaults.
+  const cs = typeof document === "undefined" ? null : getComputedStyle(document.documentElement);
+  const get = (n: string, f: string) => cs?.getPropertyValue(n).trim() || f;
   return { idle: get("--idle", "#1f8a7d"), use: get("--use", "#b9c7ce"), sleep: get("--sleep", "#e3eaed"),
     mut: get("--mut", "#5b7480"), line: get("--line", "#d5dfe3") };
 }
@@ -51,7 +52,7 @@ export default function TimeView({ devices, summaries, today, hoursSoFarToday, r
   for (let i = range - 1; i >= 0; i--) {
     const d = new Date(end.getTime() - i * 86400000).toISOString().slice(0, 10);
     const r = byDate.get(d);
-    const label = new Date(`${d}T00:00:00Z`).toLocaleDateString(undefined, range > 7 ? { day: "numeric", month: "short" } : { weekday: "short", day: "numeric" });
+    const label = new Date(`${d}T00:00:00Z`).toLocaleDateString("en-SG", range > 7 ? { day: "numeric", month: "short", timeZone: "UTC" } : { weekday: "short", day: "numeric", timeZone: "UTC" });
     if (!r) { days.push({ label, idle: 0, inUse: 0, off: 0 }); continue; }
     const x = splitDay(r, d, today, hoursSoFarToday);
     days.push({ label, idle: +x.idle.toFixed(2), inUse: +x.inUse.toFixed(2), off: +x.off.toFixed(2) });
@@ -60,22 +61,27 @@ export default function TimeView({ devices, summaries, today, hoursSoFarToday, r
   const avgIdle = tracked.length ? tracked.reduce((a, d) => a + d.idle, 0) / tracked.length : 0;
   const avgUse = tracked.length ? tracked.reduce((a, d) => a + d.inUse, 0) / tracked.length : 0;
   const c = themeColors();
+  // Recharts needs resolved colours, which only exist in the browser; render the
+  // chart after hydration so server and client HTML match in both themes.
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
+  // Each device contributes up to 24 h per day, so "All devices" stacks higher.
+  const dayMax = 24 * Math.max(1, chosen.length);
 
   return (
     <div className="card">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <div className="card-head">
         <div>
-          <h3 className="text-sm font-bold">Time</h3>
-          <p className="text-xs text-[var(--mut)]">How your {device === "all" ? "devices" : "device"} spent each day, measured by the agent.</p>
+          <h2 className="card-title">Time</h2>
+          <p className="card-sub">How your {device === "all" ? "devices" : "device"} spent each day, measured by the agent.</p>
         </div>
         <div className="flex gap-2">
           <select aria-label="Device" value={device} onChange={(e) => setDevice(e.target.value)}
-            className="rounded-lg border border-[var(--line)] bg-[var(--surf)] px-2 py-1 text-xs">
+            className="input h-8 w-auto text-xs">
             <option value="all">All devices</option>
             {devices.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
           <select aria-label="Range" value={range} onChange={(e) => setRange(Number(e.target.value))}
-            className="rounded-lg border border-[var(--line)] bg-[var(--surf)] px-2 py-1 text-xs">
+            className="input h-8 w-auto text-xs">
             <option value={7}>Last 7 days</option><option value={30}>Last 30 days</option>
           </select>
         </div>
@@ -86,11 +92,11 @@ export default function TimeView({ devices, summaries, today, hoursSoFarToday, r
           [fmtHours(totals.idle), "Idle time given, all time"],
           [fmtHours(totals.inUse), "Screen time (in use), all time"],
           [`S$${(totals.coreHours * ratePerCoreHour).toFixed(totals.coreHours * ratePerCoreHour < 1 ? 3 : 2)}`, "Est. value of idle time, all time"],
-          [joined ? new Date(joined).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "—", "Tracking since"],
+          [joined ? new Date(joined).toLocaleDateString("en-SG", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Singapore" }) : "—", "Tracking since"],
         ].map(([v, l]) => (
-          <div key={l} className="rounded-lg bg-[var(--bg)] p-3">
-            <b className="block font-mono text-lg tabular-nums">{v}</b>
-            <span className="text-xs text-[var(--mut)]">{l}</span>
+          <div key={l} className="rounded-lg border border-[var(--line)] bg-[var(--bg)] px-3.5 py-3">
+            <span className="block text-xs text-[var(--mut)]">{l}</span>
+            <b className="mt-1 block text-lg font-semibold tabular-nums">{v}</b>
           </div>
         ))}
       </div>
@@ -98,24 +104,24 @@ export default function TimeView({ devices, summaries, today, hoursSoFarToday, r
       {tracked.length ? (
         <>
           <div className="h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
+            {mounted && <ResponsiveContainer width="100%" height="100%">
               <BarChart data={days} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={c.line} vertical={false} />
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: c.mut }} tickLine={false} axisLine={{ stroke: c.line }} interval="preserveStartEnd" minTickGap={8} />
-                <YAxis tick={{ fontSize: 11, fill: c.mut }} tickLine={false} axisLine={false} domain={[0, 24]} ticks={[0, 6, 12, 18, 24]} unit="h" />
+                <YAxis tick={{ fontSize: 11, fill: c.mut }} tickLine={false} axisLine={false} domain={[0, dayMax]} ticks={[0, dayMax / 4, dayMax / 2, (dayMax * 3) / 4, dayMax]} unit="h" />
                 <Tooltip formatter={(v) => fmtHours(Number(v))}
                   contentStyle={{ background: "var(--surf)", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12 }} />
                 <Bar dataKey="idle" name="Usable idle" stackId="d" fill={c.idle} isAnimationActive={false} />
                 <Bar dataKey="inUse" name="In use (screen time)" stackId="d" fill={c.use} isAnimationActive={false} />
                 <Bar dataKey="off" name="Asleep, off or not tracked" stackId="d" fill={c.sleep} isAnimationActive={false} />
               </BarChart>
-            </ResponsiveContainer>
+            </ResponsiveContainer>}
           </div>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--mut)]">
             <span className="flex flex-wrap gap-3">
-              <span><s className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-[-1px]" style={{ background: c.idle }} />Usable idle</span>
-              <span><s className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-[-1px]" style={{ background: c.use }} />In use (screen time)</span>
-              <span><s className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-[-1px]" style={{ background: c.sleep }} />Asleep, off or not tracked</span>
+              <span><s className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-[-1px]" style={{ background: "var(--idle)" }} />Usable idle</span>
+              <span><s className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-[-1px]" style={{ background: "var(--use)" }} />In use (screen time)</span>
+              <span><s className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-[-1px]" style={{ background: "var(--sleep)" }} />Asleep, off or not tracked</span>
             </span>
             <span>Average per tracked day: {fmtHours(avgIdle)} idle, {fmtHours(avgUse)} in use</span>
           </div>

@@ -87,8 +87,8 @@ export default function MarketApp({ userId }: { userId: string }) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold">Market</h2>
-          <p className="text-sm text-[var(--mut)]">How Nightshift sells idle capacity to customers, simulated hour by hour.</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Market</h1>
+          <p className="mt-1 text-sm text-[var(--mut)]">How Nightshift sells idle capacity to customers, simulated hour by hour.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-mono text-base font-semibold tabular-nums">{clockLabel(snap.clock)}</span>
@@ -239,13 +239,13 @@ function Overview({ s, m }: { s: Snap; m: Market }) {
         { v: `×${k.surge.toFixed(2)}`, l: `GPU surge · ${k.backlog_gpu.toFixed(1)} GPU-h waiting` },
       ]} />
       <div className="grid gap-3 lg:grid-cols-2">
-        <div className="card"><h3 className="mb-2 text-sm font-bold">Fleet availability</h3><FleetChart data={s.series} />
+        <div className="card"><h3 className="mb-2 text-sm font-semibold">Fleet availability</h3><FleetChart data={s.series} />
           <Legend items={[["Working", "var(--idle)"], ["Idle, waiting", "var(--idle)", 0.35], ["In use", "var(--use)"], ["Asleep or off", "var(--sleep)"]]} /></div>
-        <div className="card"><h3 className="mb-2 text-sm font-bold">Money so far</h3><MoneyChart data={s.series} />
+        <div className="card"><h3 className="mb-2 text-sm font-semibold">Money so far</h3><MoneyChart data={s.series} />
           <Legend items={[["Customers paid", "var(--ink)"], ["Paid to contributors", "var(--mut)"], ["Nightshift profit", "var(--idle)"]]} /></div>
       </div>
       <div className="card">
-        <h3 className="mb-3 text-sm font-bold">Latest orders</h3>
+        <h3 className="mb-3 text-sm font-semibold">Latest orders</h3>
         {!s.orders.length ? <p className="py-6 text-center text-sm text-[var(--mut)]">Waiting for the first order…</p> : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {s.orders.map((o) => (
@@ -270,7 +270,7 @@ function Overview({ s, m }: { s: Snap; m: Market }) {
         )}
       </div>
       <div className="card">
-        <h3 className="mb-2 text-sm font-bold">Activity</h3>
+        <h3 className="mb-2 text-sm font-semibold">Activity</h3>
         <ul className="max-h-[320px] overflow-y-auto text-sm">
           {s.events.map((e, i) => (
             <li key={i} className="grid grid-cols-[100px_1fr] gap-2 border-b border-[var(--line)] py-1.5 last:border-0">
@@ -303,7 +303,7 @@ function Settings({ s, m, refresh }: { s: Snap; m: Market; refresh: () => void }
   return (
     <>
       <div className="card">
-        <h3 className="mb-1 text-sm font-bold">Scenarios</h3>
+        <h3 className="mb-1 text-sm font-semibold">Scenarios</h3>
         <p className="mb-3 text-xs text-[var(--mut)]">Each scenario resets the assumptions to defaults, then applies its change.</p>
         <div className="flex flex-wrap gap-2">
           {Object.entries(SCENARIOS).map(([id, sc]) => (
@@ -313,7 +313,7 @@ function Settings({ s, m, refresh }: { s: Snap; m: Market; refresh: () => void }
         </div>
       </div>
       <div className="card">
-        <h3 className="mb-3 text-sm font-bold">Assumptions</h3>
+        <h3 className="mb-3 text-sm font-semibold">Assumptions</h3>
         <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
           {SLIDERS.map(([key, label, min, max, step, fmt, hint]) => (
             <div key={key}>
@@ -328,7 +328,7 @@ function Settings({ s, m, refresh }: { s: Snap; m: Market; refresh: () => void }
       </div>
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="card">
-          <h3 className="mb-3 text-sm font-bold">Simulated fleet</h3>
+          <h3 className="mb-3 text-sm font-semibold">Simulated fleet</h3>
           <div className="grid grid-cols-3 gap-2">
             {(Object.keys(CLASSES) as DeviceClass[]).map((c) => (
               <label key={c} className="text-xs text-[var(--mut)]">{CLASSES[c].label}s
@@ -347,7 +347,7 @@ function Settings({ s, m, refresh }: { s: Snap; m: Market; refresh: () => void }
           <p className="text-xs text-[var(--mut)]">Your devices join with their real idle status, refreshed every 30 seconds. Their work in the market is modelled; nothing runs on them.</p>
         </div>
         <div className="card">
-          <h3 className="mb-3 text-sm font-bold">Economics by device type</h3>
+          <h3 className="mb-3 text-sm font-semibold">Economics by device type</h3>
           <table className="w-full text-sm">
             <thead><tr className="text-left text-xs text-[var(--mut)]"><th className="py-1">Type</th><th className="text-right">Devices</th><th className="text-right">Contributor net / month</th><th className="text-right">Nightshift fee / month</th></tr></thead>
             <tbody>{s.classes.map((c) => (
@@ -380,7 +380,7 @@ function Customers({ s, m, refresh }: { s: Snap; m: Market; refresh: () => void 
   return (
     <>
       <div className="card">
-        <h3 className="mb-1 text-sm font-bold">Order compute</h3>
+        <h3 className="mb-1 text-sm font-semibold">Order compute</h3>
         <p className="mb-3 text-xs text-[var(--mut)]">Get a quote and place an order as a customer. Prices and delivery come from the live market.</p>
         <div className="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <label className="text-xs text-[var(--mut)]">Company<input className={input} value={buyer} maxLength={60} onChange={(e) => setBuyer(e.target.value)} /></label>
@@ -407,7 +407,7 @@ function Customers({ s, m, refresh }: { s: Snap; m: Market; refresh: () => void 
 
       <div className="card">
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-          <h3 className="text-sm font-bold">Customers</h3>
+          <h3 className="text-sm font-semibold">Customers</h3>
           <span className="text-xs text-[var(--mut)]">{s.buyers.filter((b) => b.enabled && b.status === "active").length} of {s.buyers.length} ordering</span>
         </div>
         <p className="mb-3 text-xs text-[var(--mut)]">Each customer orders at its own busy hours, with its own order sizes, deadlines and price limits. Switch one off to see how the market does without it.</p>
@@ -451,7 +451,7 @@ function Customers({ s, m, refresh }: { s: Snap; m: Market; refresh: () => void 
 
       <div className="card">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-bold">Invoices</h3>
+          <h3 className="text-sm font-semibold">Invoices</h3>
           <span className="flex gap-2">
             <select aria-label="Filter by customer" className="rounded-lg border border-[var(--line)] bg-[var(--surf)] px-2 py-1 text-xs" value={filter} onChange={(e) => setFilter(e.target.value)}>
               <option value="">All customers</option>{s.buyers.map((b) => <option key={b.name}>{b.name}</option>)}
@@ -489,7 +489,7 @@ function Contributors({ s }: { s: Snap }) {
   return (
     <div className="grid gap-3 lg:grid-cols-2">
       <div className="card">
-        <h3 className="mb-2 text-sm font-bold">Payout statement</h3>
+        <h3 className="mb-2 text-sm font-semibold">Payout statement</h3>
         <select aria-label="Device" className="mb-3 w-full rounded-lg border border-[var(--line)] bg-[var(--surf)] px-2 py-1.5 text-sm" value={st?.id ?? ""} onChange={(e) => setSel(e.target.value)}>
           {groups.map(([k, label]) => {
             const opts = s.devices.filter((d) => d.kind === k);
@@ -515,7 +515,7 @@ function Contributors({ s }: { s: Snap }) {
         )}
       </div>
       <div className="card">
-        <h3 className="mb-2 text-sm font-bold">Top earners</h3>
+        <h3 className="mb-2 text-sm font-semibold">Top earners</h3>
         <div className="overflow-x-auto">
           <table className="w-full whitespace-nowrap text-sm">
             <thead><tr className="text-left text-xs text-[var(--mut)]"><th className="py-1">Device</th><th>State</th><th className="text-right">Tasks</th><th className="text-right">Payout</th><th className="text-right">Net / month</th></tr></thead>
@@ -550,11 +550,11 @@ function Trust({ s }: { s: Snap }) {
       ]} />
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="card text-sm">
-          <h3 className="mb-2 text-sm font-bold">How results are checked</h3>
+          <h3 className="mb-2 text-sm font-semibold">How results are checked</h3>
           <p>Every device&apos;s first results are rerun on another idle device, then a random share after that. A wrong result suspends the device without pay, and the task is rerun elsewhere. Checking more catches cheats sooner but costs more. Try the <b>Lean verification</b> scenario to see bad results slip through.</p>
         </div>
         <div className="card">
-          <h3 className="mb-2 text-sm font-bold">Least reliable active devices</h3>
+          <h3 className="mb-2 text-sm font-semibold">Least reliable active devices</h3>
           <table className="w-full text-sm">
             <thead><tr className="text-left text-xs text-[var(--mut)]"><th className="py-1">Device</th><th className="text-right">Score</th><th className="text-right">Finished</th><th className="text-right">Interrupted</th></tr></thead>
             <tbody>
@@ -585,7 +585,7 @@ function Report({ s, m }: { s: Snap; m: Market }) {
   return (
     <>
       <div className="card print:hidden">
-        <h3 className="mb-2 text-sm font-bold">Save and export</h3>
+        <h3 className="mb-2 text-sm font-semibold">Save and export</h3>
         <div className="flex flex-wrap items-end gap-2">
           <label className="flex-1 text-xs text-[var(--mut)]">Run name
             <input className="mt-1 w-full rounded-lg border border-[var(--line)] bg-[var(--surf)] px-2 py-1.5 text-sm" placeholder="e.g. 200 devices, premium GPU"
@@ -632,7 +632,7 @@ function Report({ s, m }: { s: Snap; m: Market }) {
         </div>
       </div>
       <div className="card print:hidden">
-        <h3 className="mb-2 text-sm font-bold">Saved runs <span className="text-xs font-normal text-[var(--mut)]">(stored in this browser)</span></h3>
+        <h3 className="mb-2 text-sm font-semibold">Saved runs <span className="text-xs font-normal text-[var(--mut)]">(stored in this browser)</span></h3>
         <div className="overflow-x-auto">
           <table className="w-full whitespace-nowrap text-sm">
             <thead><tr className="text-left text-xs text-[var(--mut)]"><th className="py-1">Run</th><th className="text-right">Sim days</th><th className="text-right">Devices</th><th className="text-right">Customers paid</th><th className="text-right">Profit</th><th className="text-right">Margin</th><th className="text-right">Profit / month</th></tr></thead>

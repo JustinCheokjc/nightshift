@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Reveal from "@/components/Reveal";
 import Pager from "@/components/Pager";
+import PageHeader from "@/components/PageHeader";
 
 const SEVERITY_CLASS: Record<string, string> = {
   low: "pill",
@@ -57,16 +58,11 @@ export default async function OperatorSecurityPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-xl font-bold">Security</h2>
-        <p className="text-sm text-[var(--mut)]">
-          Fleet-wide posture flags, reported by the agent on each device.
-        </p>
-      </div>
+      <PageHeader title="Security" description="Fleet-wide posture flags, reported by the agent on each device." />
 
       <Reveal className="card">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-bold">Flagged devices</h3>
+          <h3 className="text-sm font-semibold">Flagged devices</h3>
           {!!flags?.length && (
             <a
               href="/admin/export"
@@ -120,7 +116,7 @@ export default async function OperatorSecurityPage({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Reveal className="card">
-          <h3 className="mb-3 text-sm font-bold">Flags by category</h3>
+          <h3 className="mb-3 text-sm font-semibold">Flags by category</h3>
           {!byCategory.size ? (
             <p className="text-sm text-[var(--mut)]">No flags yet.</p>
           ) : (
@@ -133,7 +129,7 @@ export default async function OperatorSecurityPage({
               ))}
             </ul>
           )}
-          <h3 className="mt-5 mb-3 text-sm font-bold">Response by severity</h3>
+          <h3 className="mt-5 mb-3 text-sm font-semibold">Response by severity</h3>
           <table className="w-full text-sm">
             <tbody>
               <tr>
@@ -157,7 +153,7 @@ export default async function OperatorSecurityPage({
         </Reveal>
 
         <Reveal delay={0.08} className="card">
-          <h3 className="mb-3 text-sm font-bold">Audit log</h3>
+          <h3 className="mb-3 text-sm font-semibold">Audit log</h3>
           {!auditLog?.length ? (
             <p className="text-sm text-[var(--mut)]">No audit events yet.</p>
           ) : (

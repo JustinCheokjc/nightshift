@@ -22,7 +22,7 @@ export default function EconomicsPanel({
 
   return (
     <div className="card">
-      <h3 className="mb-3 text-sm font-bold">Economics</h3>
+      <h3 className="mb-3 text-sm font-semibold">Economics</h3>
       <label className="block text-xs text-[var(--mut)]">
         Price per core-hour (S${price})
       </label>

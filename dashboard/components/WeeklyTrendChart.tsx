@@ -11,19 +11,21 @@ import {
 
 export default function WeeklyTrendChart({
   data,
+  className = "h-[140px]",
 }: {
   data: { date: string; hours: number }[];
+  className?: string;
 }) {
   const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
   const formatted = sorted.map((d) => ({
     ...d,
-    label: new Date(d.date + "T00:00:00").toLocaleDateString(undefined, {
+    label: new Date(d.date + "T00:00:00").toLocaleDateString("en-SG", {
       weekday: "short",
     }),
   }));
 
   return (
-    <div className="h-[140px]">
+    <div className={className}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={formatted} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
           <defs>

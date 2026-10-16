@@ -4,6 +4,7 @@ import { sumBy } from "@/lib/strip";
 import SimWallet from "@/components/SimWallet";
 import Reveal from "@/components/Reveal";
 import Pager from "@/components/Pager";
+import PageHeader from "@/components/PageHeader";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "Pending",
@@ -83,15 +84,11 @@ export default async function WalletPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h2 className="text-xl font-bold">Wallet</h2>
-          <p className="text-sm text-[var(--mut)]">
-            What your idle hours would earn once paid jobs run. Final terms are in the consent form.
-          </p>
-        </div>
-        <span className="pill border-[var(--amber)] text-[var(--amber)]">Simulated · no real money</span>
-      </div>
+      <PageHeader
+        title="Wallet"
+        description="What your idle hours would earn once paid jobs run. Final terms are in the consent form."
+        actions={<span className="badge warn">Simulated · no real money</span>}
+      />
 
       <SimWallet
         userId={profile!.id}
@@ -104,7 +101,7 @@ export default async function WalletPage({
       <Reveal className="card">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold">Pilot payments</h3>
+            <h3 className="text-sm font-semibold">Pilot payments</h3>
             <p className="text-xs text-[var(--mut)]">
               Recorded ledger: {"S$" + available.toFixed(2)} available, {"S$" + pending.toFixed(2)} pending, {"S$" + paid.toFixed(2)} paid.
             </p>

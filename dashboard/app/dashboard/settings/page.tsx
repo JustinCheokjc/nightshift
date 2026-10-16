@@ -1,20 +1,16 @@
 import { getProfile } from "@/lib/dal";
 import Reveal from "@/components/Reveal";
+import PageHeader from "@/components/PageHeader";
 
 export default async function SettingsPage() {
   const profile = await getProfile();
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-xl font-bold">Settings</h2>
-        <p className="text-sm text-[var(--mut)]">
-          Your account and data.
-        </p>
-      </div>
+      <PageHeader title="Settings" description="Your account and data." />
 
       <Reveal className="card">
-        <h3 className="mb-3 text-sm font-bold">Profile</h3>
+        <h3 className="mb-3 text-sm font-semibold">Profile</h3>
         <dl className="grid grid-cols-[100px_1fr] gap-y-2 text-sm">
           <dt className="text-[var(--mut)]">Email</dt>
           <dd>{profile?.email}</dd>
@@ -28,7 +24,7 @@ export default async function SettingsPage() {
       </Reveal>
 
       <Reveal delay={0.06} className="card">
-        <h3 className="mb-2 text-sm font-bold">Your data</h3>
+        <h3 className="mb-2 text-sm font-semibold">Your data</h3>
         <p className="mb-3 text-sm text-[var(--mut)]">
           Download everything Nightshift has stored about you — devices,
           sessions, daily summaries, security flags, and wallet entries — as
@@ -36,7 +32,7 @@ export default async function SettingsPage() {
         </p>
         <a
           href="/dashboard/export"
-          className="inline-block rounded-lg border border-[var(--line)] px-4 py-2 text-sm"
+          className="btn"
         >
           Download my data
         </a>
