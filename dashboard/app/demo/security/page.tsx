@@ -10,6 +10,9 @@ export default async function DemoSecurityPage() {
       flags={demoFlagsNow()}
       deviceNames={new Map(devices.map((d) => [d.id, d.name]))}
       deviceCount={devices.length}
+      deviceOs={new Map(devices.map((d) => [d.id, d.os]))}
+      checkedCount={devices.length}
+      lastCheckedAgo="2 h ago"
     />
   );
 }

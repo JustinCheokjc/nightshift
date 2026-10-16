@@ -42,7 +42,7 @@
       a: "The app is being designed to work only while plugged in, and to pause when the laptop is busy or hot. The pilot runs no compute jobs, so it adds almost no load.",
       next: ["slow", "power"] },
     { id: "see", q: "What does the app see?", keys: ["what does the app see", "what do you collect", "collect", "track", "monitor", "spy", "see", "read", "access", "file", "browsing", "keystroke", "keylog", "location", "screen", "privacy", "private", "personal"],
-      a: "Only device state: whether your laptop is on, plugged in and idle; CPU, GPU and memory load; hardware specs; network type; and simple security checks such as whether the firewall is on. It never sees your files, browsing, keystrokes, screen contents or location.",
+      a: "Only device state: whether your laptop is on, plugged in and idle; CPU and memory load; hardware specs; and simple safety checks such as whether the firewall is on. It never sees your files, browsing, keystrokes, screen contents or location.",
       link: ["Trust and safety", "/trust/"], next: ["who", "keep", "safe"] },
     { id: "who", q: "Who can see my data?", keys: ["who can see", "who see my data", "share my data", "sell", "third party", "data"],
       a: "Only the project team, under a consent form you can review. You can export or delete your data at any time.",

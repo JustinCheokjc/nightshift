@@ -33,3 +33,12 @@ export function sgHour(ms: number): number {
 export function since30Days(): string {
   return sgDateDaysAgo(Date.now(), 30);
 }
+
+/** "just now", "5 min ago", "3 h ago", "2 d ago" for a past ISO timestamp. */
+export function agoText(iso: string): string {
+  const min = Math.round((Date.now() - Date.parse(iso)) / 60000);
+  if (min < 2) return "just now";
+  if (min < 60) return `${min} min ago`;
+  const h = Math.round(min / 60);
+  return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
+}

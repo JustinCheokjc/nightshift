@@ -2,7 +2,9 @@
 the Nightshift dashboard. Runs on Windows, macOS and Linux.
 
 Collects only: power state, battery level, seconds since the last keyboard
-or mouse input, CPU and memory use, and basic hardware info at setup.
+or mouse input, CPU and memory use, basic hardware info at setup, and every
+few hours four yes/no safety checks (firewall, antivirus, disk encryption,
+days since the last system update).
 Never collects file contents, browsing data, keystrokes or screen content.
 
   nightshift-agent                 first run: privacy notice + setup key; then runs
@@ -30,9 +32,10 @@ try:
 except ImportError:
     psutil = None
 
-AGENT_VERSION = "0.3.0"
-CONSENT_VERSION = "agent-1"
+AGENT_VERSION = "0.4.0"
+CONSENT_VERSION = "agent-2"  # agent-2 adds the safety checks
 INTERVAL_SEC = 60
+POSTURE_EVERY_SEC = 6 * 3600  # safety checks: at start, then every 6 hours
 SYSTEM = platform.system()  # "Windows", "Darwin" or "Linux"
 
 PRIVACY_NOTICE = """\
@@ -44,6 +47,9 @@ Every minute, this agent sends the Nightshift dashboard:
   - CPU and memory use, as percentages
 Once, at setup: the computer's name, operating system, processor,
 number of cores and amount of memory.
+Every 6 hours, four safety checks, as yes/no answers only: is the
+firewall on, is antivirus on, is the disk encrypted, and how many days
+since the last system update.
 
 It never reads your files, browsing, keystrokes or screen. It does not
 run any jobs on this computer. Pause it or delete your data any time
@@ -85,8 +91,9 @@ def save_config(cfg):
 
 
 def run(cmd, timeout=5):
+    flags = 0x08000000 if SYSTEM == "Windows" else 0  # CREATE_NO_WINDOW
     try:
-        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout).stdout
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, creationflags=flags).stdout
     except (OSError, subprocess.SubprocessError):
         return ""
 
@@ -323,6 +330,54 @@ def screen_signals():
     return locked, busy
 
 
+# ----------------------------------------------------------------------------
+# Safety checks (yes/no only). None means "couldn't tell", which never raises
+# a flag on the dashboard.
+# ----------------------------------------------------------------------------
+_WIN_POSTURE = r"""
+$ErrorActionPreference = 'SilentlyContinue'
+$fw = @(Get-NetFirewallProfile | ForEach-Object { @{ n = "$($_.Name)"; e = ("$($_.Enabled)" -eq 'True') } })
+$av = @(Get-CimInstance -Namespace root/SecurityCenter2 -ClassName AntiVirusProduct | ForEach-Object { [int]$_.productState })
+$bl = (New-Object -ComObject Shell.Application).NameSpace($env:SystemDrive).Self.ExtendedProperty('System.Volume.BitLockerProtection')
+$hf = Get-HotFix | Where-Object InstalledOn | Sort-Object InstalledOn -Descending | Select-Object -First 1 -ExpandProperty InstalledOn
+@{ fw = $fw; av = $av; bl = $bl; hf = $(if ($hf) { $hf.ToString('yyyy-MM-dd') } else { $null }) } | ConvertTo-Json -Compress -Depth 4
+"""
+
+
+def posture():
+    out = {"firewall_on": None, "antivirus_on": None, "disk_encrypted": None, "os_patch_age_days": None}
+    if SYSTEM == "Windows":
+        raw = run(["powershell", "-NoProfile", "-NonInteractive", "-Command", _WIN_POSTURE], timeout=60).strip()
+        data = json.loads(raw) if raw.startswith("{") else {}
+        profiles = {p.get("n"): p.get("e") for p in (data.get("fw") or []) if isinstance(p, dict)}
+        if profiles:
+            # Home and public networks are what matter on a personal laptop.
+            out["firewall_on"] = all(profiles.get(n, True) for n in ("Private", "Public"))
+        states = data.get("av")
+        if isinstance(states, int):
+            states = [states]
+        if states:
+            out["antivirus_on"] = any(int(st) & 0x1000 for st in states)  # "real-time protection on" bit
+        bl = data.get("bl")
+        out["disk_encrypted"] = True if bl in (1, 3, 5, 6) else False if bl == 2 else None
+        if data.get("hf"):
+            installed = datetime.strptime(data["hf"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            out["os_patch_age_days"] = max(0, (datetime.now(timezone.utc) - installed).days)
+    elif SYSTEM == "Darwin":
+        fw = run(["/usr/libexec/ApplicationFirewall/socketfilterfw", "--getglobalstate"]).lower()
+        out["firewall_on"] = True if "enabled" in fw else False if "disabled" in fw else None
+        fv = run(["fdesetup", "status"]).lower()
+        out["disk_encrypted"] = True if "is on" in fv else False if "is off" in fv else None
+        # macOS has built-in malware protection (XProtect); there is no on/off switch to check.
+    else:
+        if shutil.which("systemctl"):
+            active = [run(["systemctl", "is-active", svc]).strip() for svc in ("ufw", "firewalld", "nftables")]
+            out["firewall_on"] = "active" in active
+        if shutil.which("lsblk"):
+            out["disk_encrypted"] = "crypt" in run(["lsblk", "-rno", "TYPE"]).split()
+    return out
+
+
 def safe(fn, default=None):
     try:
         return fn()
@@ -402,7 +457,8 @@ def setup(key):
     server = server_from_key(key)
     res = post(f"{server}/api/agent/enroll", {"setup_key": key, "device": device_info(),
                                                "consent_version": CONSENT_VERSION})
-    cfg = {"server": server, "device_id": res["device_id"], "name": res["name"], "token": res["token"]}
+    cfg = {"server": server, "device_id": res["device_id"], "name": res["name"], "token": res["token"],
+           "consent_version": CONSENT_VERSION}
     save_config(cfg)
     return cfg
 
@@ -460,13 +516,23 @@ def report_loop(cfg, quiet):
     if not quiet:
         print("Leave this window open, or close it if it starts automatically at login. Ctrl+C stops it.\n", flush=True)
     pending = queue_load()
+    next_posture = 0.0
     try:
         while True:
             started = time.monotonic()
             pending.append(reading())
+            body = {"interval_sec": interval, "readings": pending[-1500:]}
+            if cfg.get("consent_version") == CONSENT_VERSION and started >= next_posture:
+                body["posture"] = safe(posture, None)
+            if cfg.get("consent_unsent"):
+                body["consent_version"] = CONSENT_VERSION
             try:
-                res = post(url, {"interval_sec": interval, "readings": pending[-1500:]}, cfg["token"])
+                res = post(url, body, cfg["token"])
                 pending = []
+                if "posture" in body:
+                    next_posture = started + POSTURE_EVERY_SEC
+                if cfg.pop("consent_unsent", None):
+                    save_config(cfg)
                 if res.get("paused"):
                     log("Paused from the dashboard. Not recording.", quiet)
                 else:
@@ -593,7 +659,7 @@ def main(argv):
         return
     if "--check" in argv:
         r = reading()
-        print(json.dumps({"device": device_info(), "reading": r}, indent=2))
+        print(json.dumps({"device": device_info(), "reading": r, "safety_checks": safe(posture)}, indent=2))
         if r["input_idle_sec"] is None:
             print("\nIdle time unavailable. On Linux, install xprintidle or use GNOME/KDE.")
         return
@@ -627,6 +693,14 @@ def main(argv):
         if not cfg:
             ask("\nPress Enter to close.")
             return
+    if cfg.get("consent_version") != CONSENT_VERSION and not quiet:
+        print("The privacy notice has changed since you set up this agent:\n")
+        print(PRIVACY_NOTICE)
+        if ask("Type yes to agree (or press Enter to keep the old settings, without safety checks): ").lower() in ("y", "yes"):
+            cfg["consent_version"] = CONSENT_VERSION
+            cfg["consent_unsent"] = True
+            save_config(cfg)
+            print("Thanks. Safety checks are now on.\n")
     report_loop(cfg, quiet)
 
 

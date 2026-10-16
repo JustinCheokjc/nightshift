@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { readDeviceToken } from "@/lib/agentAuth";
 import { sgDate } from "@/lib/time";
+import { cleanPosture, syncPosture } from "@/lib/posture";
 
 // Agent readings, sent every minute (or in a batch after being offline).
 // The server decides "usable idle" from the device's settings, so changing
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient();
   const [{ data: device }, { data: settings }] = await Promise.all([
-    admin.from("devices").select("id, status, cores").eq("id", deviceId).single(),
+    admin.from("devices").select("id, status, cores, user_id, agent_version").eq("id", deviceId).single(),
     admin.from("device_settings").select("*").eq("device_id", deviceId).maybeSingle(),
   ]);
   // Deleted from the dashboard: tell the agent to stop and forget its token.
@@ -94,6 +95,18 @@ export async function POST(request: Request) {
   }
   // Paused on the dashboard: drop readings, keep the agent waiting.
   if (reply.paused) return Response.json(reply);
+
+  // Keep the recorded agent version current after an update (sent as User-Agent: nightshift-agent/x.y.z).
+  const version = /^nightshift-agent\/([0-9][0-9A-Za-z.+-]{0,29})$/.exec(request.headers.get("user-agent") ?? "")?.[1];
+  if (version && version !== device.agent_version) await admin.from("devices").update({ agent_version: version }).eq("id", deviceId);
+  // A person accepted an updated privacy notice in the agent.
+  if (typeof body?.consent_version === "string" && /^agent-\d{1,3}$/.test(body.consent_version)) {
+    await admin.from("consent_log").insert({ user_id: device.user_id, version: body.consent_version });
+  }
+
+  // Safety checks (agent 0.4.0+, every few hours). Recorded even if no new readings follow.
+  const posture = cleanPosture(body?.posture);
+  if (posture) await syncPosture(admin, deviceId, posture);
 
   const readings = (Array.isArray(body?.readings) ? body.readings.slice(-MAX_BATCH) : [])
     .map(clean)

@@ -11,7 +11,6 @@ import WeeklyTrendChart from "@/components/WeeklyTrendChart";
 import TimeView from "@/components/TimeView";
 import AddDevice from "@/components/AddDevice";
 import PageHeader from "@/components/PageHeader";
-import DangerZone from "@/components/DangerZone";
 import Onboarding from "@/components/Onboarding";
 import Icon from "@/components/Icon";
 
@@ -331,7 +330,11 @@ export default function DevicesView({ data, demo = false, basePath }: { data: De
             </Reveal>
           </div>
 
-          {!demo && <DangerZone />}
+          {!demo && (
+            <p className="text-xs text-[var(--mut)]">
+              To delete your data or download a copy, go to <a href="/dashboard/settings" className="text-[var(--idle)] hover:underline">Settings</a>.
+            </p>
+          )}
         </>
       )}
     </div>

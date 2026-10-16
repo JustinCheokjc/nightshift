@@ -4,11 +4,31 @@ import Icon from "@/components/Icon";
 
 export type Flag = { id: string | number; device_id: string; category: string; severity: string; detail: string | null; first_seen: string };
 
-const FIXES: Record<string, { title: string; steps: string[] }> = {
-  firewall: { title: "Firewall is off", steps: ["Open Windows Security → Firewall & network protection.", "Turn the firewall on for your active network."] },
-  os_patch: { title: "System updates needed", steps: ["Install the latest operating system security updates.", "Restart the computer when asked."] },
-  antivirus: { title: "Antivirus is off", steps: ["Turn on Microsoft Defender or your antivirus.", "Make sure real-time protection is enabled."] },
-  disk_encryption: { title: "Disk isn't encrypted", steps: ["Turn on BitLocker (Windows) or FileVault (Mac).", "Keep the recovery key somewhere safe."] },
+type OsFamily = "windows" | "mac" | "linux";
+const osFamily = (os: string | undefined): OsFamily =>
+  /mac|darwin/i.test(os ?? "") ? "mac" : /windows/i.test(os ?? "") ? "windows" : "linux";
+
+const FIXES: Record<string, { title: string; steps: Record<OsFamily, string[]> }> = {
+  firewall: { title: "Firewall is off", steps: {
+    windows: ["Open Windows Security → Firewall & network protection.", "Turn on the firewall for Private and Public networks."],
+    mac: ["Open System Settings → Network → Firewall.", "Turn the firewall on."],
+    linux: ["Install and enable a firewall, for example: sudo ufw enable", "Check it's running with: sudo ufw status"],
+  } },
+  os_patch: { title: "System updates needed", steps: {
+    windows: ["Open Settings → Windows Update and click Check for updates.", "Install everything offered, then restart."],
+    mac: ["Open System Settings → General → Software Update.", "Install the update, then restart."],
+    linux: ["Run your package manager's upgrade, for example: sudo apt update && sudo apt upgrade", "Restart if the kernel was updated."],
+  } },
+  antivirus: { title: "Antivirus is off", steps: {
+    windows: ["Open Windows Security → Virus & threat protection.", "Turn on Real-time protection, or turn on your other antivirus."],
+    mac: ["macOS has built-in protection; make sure it's up to date in Software Update."],
+    linux: ["Install an antivirus such as ClamAV if your organisation requires one."],
+  } },
+  disk_encryption: { title: "Disk isn't encrypted", steps: {
+    windows: ["Open Settings → Privacy & security → Device encryption (or BitLocker on Pro editions).", "Turn it on and keep the recovery key somewhere safe."],
+    mac: ["Open System Settings → Privacy & Security → FileVault.", "Turn on FileVault and keep the recovery key somewhere safe."],
+    linux: ["Disk encryption (LUKS) is set up when the system is installed.", "If this computer holds sensitive data, consider reinstalling with encryption on."],
+  } },
 };
 const CHECKS: [string, string][] = [
   ["Firewall", "Blocks unexpected incoming connections."],
@@ -19,10 +39,16 @@ const CHECKS: [string, string][] = [
 const TONE: Record<string, string> = { low: "", medium: "warn", high: "bad", critical: "bad" };
 
 /** Security posture for a contributor's devices (live or demo). */
-export default function SecurityView({ flags, deviceNames, deviceCount, page = 1, hasNext = false }: {
-  flags: Flag[]; deviceNames: Map<string, string>; deviceCount: number; page?: number; hasNext?: boolean;
+export default function SecurityView({ flags, deviceNames, deviceOs, deviceCount, checkedCount, lastCheckedAgo, page = 1, hasNext = false }: {
+  flags: Flag[]; deviceNames: Map<string, string>; deviceOs: Map<string, string>; deviceCount: number;
+  /** Devices that have sent at least one safety check (agent 0.4.0+). */
+  checkedCount: number;
+  /** "2 h ago" etc. for the most recent check, or null. */
+  lastCheckedAgo: string | null;
+  page?: number; hasNext?: boolean;
 }) {
-  const clear = flags.length === 0 && page === 1;
+  const unchecked = checkedCount === 0 && flags.length === 0;
+  const clear = flags.length === 0 && page === 1 && !unchecked;
   const affected = new Set(flags.map((f) => f.device_id)).size;
 
   return (
@@ -32,22 +58,26 @@ export default function SecurityView({ flags, deviceNames, deviceCount, page = 1
         description="The agent reports simple yes/no checks, never files or browsing. Flagged devices are kept out of sensitive work until fixed."
       />
 
-      <section className={`card flex flex-wrap items-center gap-5 ${clear ? "" : "border-[color-mix(in_srgb,var(--amber)_40%,var(--line))]"}`}>
+      <section className={`card flex flex-wrap items-center gap-5 ${clear || unchecked ? "" : "border-[color-mix(in_srgb,var(--amber)_40%,var(--line))]"}`}>
         <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${clear
           ? "bg-[color-mix(in_srgb,var(--idle)_14%,transparent)] text-[var(--idle)]"
+          : unchecked ? "bg-[var(--bg)] text-[var(--mut)]"
           : "bg-[color-mix(in_srgb,var(--amber)_14%,transparent)] text-[var(--amber)]"}`}>
-          <Icon name={clear ? "shield" : "alert"} size={22} />
+          <Icon name={clear || unchecked ? "shield" : "alert"} size={22} />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="text-base font-semibold">{clear ? "All clear" : `${flags.length} issue${flags.length === 1 ? "" : "s"} to fix`}</h2>
+          <h2 className="text-base font-semibold">
+            {deviceCount === 0 || unchecked ? "Not checked yet" : clear ? "All clear" : `${flags.length} issue${flags.length === 1 ? "" : "s"} to fix`}
+          </h2>
           <p className="text-sm text-[var(--mut)]">
             {deviceCount === 0 ? "Add a device to start security checks."
-              : clear ? `No open issues across your ${deviceCount} device${deviceCount === 1 ? "" : "s"}.`
+              : unchecked ? "Safety checks need agent 0.4 or newer. Download the latest agent from Add a device on the Devices page and run it once."
+              : clear ? `No open issues on the ${checkedCount} checked device${checkedCount === 1 ? "" : "s"}. Last check ${lastCheckedAgo}.`
               : `On ${affected} of ${deviceCount} device${deviceCount === 1 ? "" : "s"}. Issues clear automatically after the next check passes.`}
           </p>
         </div>
         <div className="flex gap-6 text-sm">
-          <div><span className="block text-xs text-[var(--mut)]">Devices checked</span><b className="text-lg font-semibold tabular-nums">{deviceCount}</b></div>
+          <div><span className="block text-xs text-[var(--mut)]">Devices checked</span><b className="text-lg font-semibold tabular-nums">{checkedCount} of {deviceCount}</b></div>
           <div><span className="block text-xs text-[var(--mut)]">Open issues</span><b className={`text-lg font-semibold tabular-nums ${clear ? "" : "text-[var(--amber)]"}`}>{flags.length}</b></div>
         </div>
       </section>
@@ -56,6 +86,7 @@ export default function SecurityView({ flags, deviceNames, deviceCount, page = 1
         <div className="flex flex-col gap-4 lg:col-span-2">
           {flags.map((f) => {
             const fix = FIXES[f.category];
+            const steps = fix?.steps[osFamily(deviceOs.get(f.device_id))];
             return (
               <section key={f.id} className="card">
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -70,7 +101,7 @@ export default function SecurityView({ flags, deviceNames, deviceCount, page = 1
                 </div>
                 {f.detail && fix && <p className="mt-3 text-[13px] text-[var(--mut)]">{f.detail}.</p>}
                 <ol className="mt-4 flex flex-col gap-2.5">
-                  {(fix?.steps ?? ["Check the device for the issue described above."]).map((step, i) => (
+                  {(steps ?? ["Check the device for the issue described above."]).map((step, i) => (
                     <li key={i} className="flex gap-3 text-[13px]">
                       <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[var(--line)] text-[11px] font-semibold text-[var(--mut)]">{i + 1}</span>
                       {step}
@@ -104,7 +135,8 @@ export default function SecurityView({ flags, deviceNames, deviceCount, page = 1
             ))}
           </ul>
           <p className="mt-4 border-t border-[var(--line)] pt-3 text-xs text-[var(--mut)]">
-            Only a yes or no is sent for each check. Nightshift never sees your files, browsing or keystrokes.
+            Checked when the agent starts and every 6 hours (agent 0.4 or newer). Only a yes or no is sent for each check,
+            plus the days since the last update. Nightshift never sees your files, browsing or keystrokes.
           </p>
         </section>
       </div>
