@@ -47,7 +47,7 @@ export async function runStructured<S extends z.ZodType>(opts: {
     if (error instanceof ContentFilterFinishReasonError) return { ok: false, error: "The AI declined to answer this one." };
     if (error instanceof OpenAI.RateLimitError) return { ok: false, error: "The AI is busy right now. Try again in a minute." };
     if (error instanceof OpenAI.AuthenticationError) {
-      console.error("OpenAI API key rejected");
+      console.error(`OpenAI API key rejected: ${error.message}`); // OpenAI masks the key in this message
       return { ok: false, error: "AI features are misconfigured on the server." };
     }
     if (error instanceof OpenAI.APIError) {
