@@ -32,7 +32,7 @@ export function useAi<T>(call: (mode: AiMode) => Promise<AiResponse<T>>, { autoP
   return { data, error, off, pending, run };
 }
 
-const ABOUT_AI = "Written by Claude, an AI model from Anthropic, using only summary facts such as hours, settings and your operating system. It never sees your files, keystrokes or anything the agent doesn't collect. AI can be wrong: check anything important.";
+const ABOUT_AI = "Written by an OpenAI GPT model using only summary facts such as hours, settings and your operating system. It never sees your files, keystrokes or anything the agent doesn't collect. AI can be wrong: check anything important.";
 
 /** Label shown on every AI-written block. */
 export function AiLabel({ createdAt }: { createdAt?: string }) {

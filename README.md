@@ -26,7 +26,7 @@ Nightshift is built in phases. **Phase 1 (this repository) is measurement only**
 2. They install the lightweight **Nightshift agent** (Windows, macOS or Linux) and paste in the key. The agent shows a plain-language privacy notice and asks for consent.
 3. Every 60 seconds the agent reports device *state only*: plugged in or not, battery level, seconds since the last keyboard or mouse input, CPU and memory use, and whether the screen is locked or a full-screen app is playing.
 4. The server decides whether each minute was **usable idle** (plugged in, untouched for the idle threshold, CPU under the threshold, no full-screen video). Contributors can change those thresholds on the dashboard without updating the agent.
-5. The dashboard turns readings into idle timelines, usable core-hours, estimated earnings against estimated electricity cost, and simple security health checks. **AI insights** (Claude) explain each device's idle pattern in plain English and give step-by-step fixes for failed security checks.
+5. The dashboard turns readings into idle timelines, usable core-hours, estimated earnings against estimated electricity cost, and simple security health checks. **AI insights** (OpenAI GPT) explain each device's idle pattern in plain English and give step-by-step fixes for failed security checks.
 6. An **operator console** shows fleet-wide capacity, a typical-day forecast by hour, hardware mix, quiet devices and open security flags, plus an **AI daily briefing** with risks and next steps.
 
 A separate **market sandbox** simulates Phase 2: fictional buyers place orders, tasks are split across simulated and real idle devices, results are spot-checked, and the economics (revenue, fees, payouts, refunds, verification cost) are tracked. No real money moves.
@@ -66,9 +66,9 @@ A separate **market sandbox** simulates Phase 2: fictional buyers place orders, 
 
 ## AI Integration
 
-Nightshift uses **Claude Opus 5.5** (Anthropic) through the official Anthropic TypeScript SDK, called only from the dashboard's server. Four features use it. Each one follows the same pattern: the server computes a small set of **summary facts**, Claude answers in a **fixed JSON shape** (structured outputs), and the page renders that JSON as plain text with an "AI" label.
+Nightshift uses an **OpenAI GPT model** (`gpt-5.4-mini` by default, configurable with `OPENAI_MODEL`) through the official OpenAI TypeScript SDK, called only from the dashboard's server. Four features use it. Each one follows the same pattern: the server computes a small set of **summary facts**, the model answers in a **fixed JSON shape** (structured outputs), and the page renders that JSON as plain text with an "AI" label.
 
-| Feature | Where | What Claude receives | What it returns |
+| Feature | Where | What the AI receives | What it returns |
 |---|---|---|---|
 | **Device insights** | Device page (`components/ai/DeviceInsights.tsx`) | 7-day totals, daily hours, average idle and in-use minutes for each hour of the day, the idle setting, and counts of minutes that didn't count by reason (on battery, CPU busy, in use) | A headline, 2–4 insights tagged *pattern*, *tip* or *caution*, each citing its numbers, and the most reliable idle window |
 | **Security fix assistant** | Security page (`components/ai/SecurityHelp.tsx`) | The operating system name, the failed check, and (optionally) the user's follow-up question | Why it matters, 3–6 steps using the OS's own settings, what to do if stuck, and a caution (e.g. save the recovery key) |
@@ -98,11 +98,11 @@ AI also shapes the project in two other ways:
 | GitHub Actions | Builds and smoke-tests agent binaries on Windows, macOS and Linux |
 | [GSAP](https://gsap.com), [Three.js](https://threejs.org) (via cdnjs) | Website scroll animations and 3D architecture scene |
 | [PostHog](https://posthog.com) | Privacy-conscious website analytics (no cookies; session storage only; session recording off) |
-| [Anthropic API](https://platform.claude.com) — Claude Opus 5.5 via `@anthropic-ai/sdk` | Device insights, security fix assistant, fleet briefing, help chat (structured outputs, server-side refusal fallback) |
+| [OpenAI API](https://platform.openai.com) — GPT via the `openai` SDK | Device insights, security fix assistant, fleet briefing, help chat (strict structured outputs) |
 | [Zod](https://zod.dev) | Schemas for the AI's structured answers |
 | ffmpeg | Encoding the product film |
 
-**Datasets and reference data.** No external datasets are used, and no model is trained or fine-tuned; Claude is used as-is through the API. Earnings estimates use a reference price of about S$0.02 per core-hour, based on public cloud spot CPU pricing, minus a modelled 30% platform fee. GPU rental prices were researched from public marketplaces (Vast.ai, RunPod, GPUPerHour, FastGPU). All device data comes from the pilot's own consenting contributors. The demo uses hand-made sample data (`dashboard/lib/demoData.ts`).
+**Datasets and reference data.** No external datasets are used, and no model is trained or fine-tuned; the model is used as-is through the API. Earnings estimates use a reference price of about S$0.02 per core-hour, based on public cloud spot CPU pricing, minus a modelled 30% platform fee. GPU rental prices were researched from public marketplaces (Vast.ai, RunPod, GPUPerHour, FastGPU). All device data comes from the pilot's own consenting contributors. The demo uses hand-made sample data (`dashboard/lib/demoData.ts`).
 
 ## Installation & Setup
 
@@ -130,7 +130,9 @@ SUPABASE_SERVICE_ROLE_KEY=<service role / secret key>
 # Optional: signs agent setup keys and device tokens. If unset, one is derived from the service role key.
 AGENT_SIGNING_SECRET=<a long random string>
 # Optional: turns on the AI features. Without it they are hidden and everything else works.
-ANTHROPIC_API_KEY=<key from platform.claude.com>
+OPENAI_API_KEY=<key from platform.openai.com>
+# Optional: which OpenAI model to use (default gpt-5.4-mini).
+OPENAI_MODEL=gpt-5.4-mini
 # Optional: extra website origins allowed to call the help chat API, comma-separated.
 HELP_ALLOWED_ORIGINS=https://your-site.example
 ```
@@ -186,7 +188,7 @@ Nightshift asks people to install software on their personal computers, so the m
 | Incorrect results from untrusted devices (Phase 2) | Buyers need to trust work done on hardware they don't control. |
 | AI hallucination | An AI answer could invent a privacy promise, an earnings figure or a wrong security step, and people may act on it. |
 | Prompt injection | A visitor could type instructions into the help chat to make it say something Nightshift never committed to. |
-| Data shared with an AI provider | Anything sent to Claude leaves our systems, so it must be the minimum needed. |
+| Data shared with an AI provider | Anything sent to OpenAI leaves our systems, so it must be the minimum needed. |
 | Abuse of the public AI endpoint | Anyone can type into the website chat, which could run up API costs. |
 
 ### Guardrails implemented
@@ -200,12 +202,12 @@ Nightshift asks people to install software on their personal computers, so the m
 - **Privacy-conscious analytics.** No cookies and no session recording, and the help bot never records what visitors type.
 - **AI grounded in facts, not free rein.** Every AI feature receives server-computed summary facts or the site's own FAQ, and its prompt forbids inventing numbers, promising earnings, or advising anyone to disable protections or share recovery keys. The help chat must say when the FAQ doesn't cover a question (`answerable: false`); the site then falls back to the scripted "email a person" reply instead of guessing.
 - **Scripted first.** Common help questions get word-for-word scripted answers in the browser. Only unmatched questions reach the AI. The security page keeps its vetted fix steps, and AI help is an extra button below them.
-- **Structured outputs, rendered as text.** Claude must answer in a fixed JSON schema (Zod), which the pages render as plain text, never as HTML. The help chat only accepts topic ids that exist in the knowledge base.
+- **Structured outputs, rendered as text.** The model must answer in a fixed JSON schema (Zod), which the pages render as plain text, never as HTML. The help chat only accepts topic ids that exist in the knowledge base.
 - **Prompt-injection handling.** User text is wrapped in `<question>` tags and the prompts say it is never instructions. The security assistant flags off-topic questions (`on_topic: false`) and declines them.
 - **Minimal data to the AI.** Only aggregates (hours, counts, OS name, the idle setting) are sent. The fleet briefing uses device names, never owner emails. No question text is stored: the cache keys answers by a hash of the question, and rate limits key on a hashed IP.
-- **Refusals and failures handled.** Requests opt in to Anthropic's server-side fallback on safety refusals. Refusals, truncated answers, rate limits and outages show a clear message and leave the rest of the page working. Without an API key the AI features are hidden entirely.
+- **Refusals and failures handled.** Model refusals, content-filter stops, truncated answers, rate limits and outages show a clear message and leave the rest of the page working. Without an API key the AI features are hidden entirely.
 - **Abuse and cost limits.** The help API only accepts requests from the Nightshift site's origins and questions of up to 300 characters. It allows 12 questions per IP per hour and 500 a day overall. Signed-in features are limited per user (for example 15 device analyses a day), and answers are cached (help answers for a week, security steps per OS and check for 30 days, demo insights per day).
-- **Clearly labelled.** Every AI block carries an "AI" badge, when it was generated, and a note that AI can be wrong. The website's privacy notice and chat footer say which questions go to Anthropic.
+- **Clearly labelled.** Every AI block carries an "AI" badge, when it was generated, and a note that AI can be wrong. The website's privacy notice and chat footer say which questions go to OpenAI.
 - **Result verification (sandbox).** The marketplace simulation rechecks every device's first results and a random 5% of later results by recomputing them, to measure what verification costs.
 
 ### Testing done
@@ -215,7 +217,7 @@ Nightshift asks people to install software on their personal computers, so the m
 - **Marketplace simulation runs** to stress-test pricing, take rate and verification settings under simulated day and night device habits.
 - **Linting** with ESLint, type-checking with TypeScript, and a production build of the dashboard.
 - **AI endpoint checks** against a running production build: requests with no origin or an unknown origin are refused (403), the CORS preflight succeeds only for the site's origin, too-short questions are rejected (400), the 13th question in an hour from one IP gets a 429, and a bad API key returns a clean error instead of crashing. AI cards render on the public demo pages, and pages still work with AI switched off.
-- **Fact inspection.** The exact JSON sent to Claude was printed for the demo devices to confirm it holds only aggregates.
+- **Fact inspection.** The exact JSON sent to the AI was printed for the demo devices to confirm it holds only aggregates.
 
 ### Known limitations
 - **Small sample.** Pilot data so far comes from very few devices, so forecasts and per-device averages are not yet statistically meaningful, and no forecast error rate has been measured.

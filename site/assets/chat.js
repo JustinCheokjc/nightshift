@@ -1,5 +1,5 @@
 // Nightshift help bot: scripted answers drawn only from the site's own FAQ, privacy notice and pilot details.
-// Questions the scripted answers don't cover go to the dashboard's /api/help, where Claude (Anthropic's AI)
+// Questions the scripted answers don't cover go to the dashboard's /api/help, where an OpenAI GPT model
 // answers using only the same FAQ (dashboard/lib/ai/helpKnowledge.ts mirrors KB below: keep them in sync).
 // Matched questions never leave the browser. Analytics records only which answer was shown, never the text.
 (function () {
@@ -73,8 +73,8 @@
     { id: "cookies", q: "Does this website use cookies?", keys: ["cookie", "analytics", "posthog", "tracking website"],
       a: "The website counts page visits and button clicks with PostHog. It sets no cookies, keeps its identifier only until you close the tab, and does not record what you type into forms or into this chat.",
       link: ["Privacy notice", "/about/#privacy"], next: ["see", "who"] },
-    { id: "ai", q: "Does Nightshift use AI?", keys: ["ai", "artificial intelligence", "claude", "anthropic", "chatgpt", "llm", "machine learning", "are you a bot", "are you human", "is this ai"],
-      a: "Yes, in a few clearly labelled places, using Claude by Anthropic. This chat uses it for questions the scripted answers don't cover, answering only from our FAQ. The dashboard uses it to explain a device's idle pattern and give security fix steps. The AI only receives summary numbers, never your files or keystrokes, and AI answers can be wrong.",
+    { id: "ai", q: "Does Nightshift use AI?", keys: ["ai", "artificial intelligence", "openai", "gpt", "chatgpt", "llm", "machine learning", "are you a bot", "are you human", "is this ai"],
+      a: "Yes, in a few clearly labelled places, using OpenAI's GPT models. This chat uses it for questions the scripted answers don't cover, answering only from our FAQ. The dashboard uses it to explain a device's idle pattern and give security fix steps. The AI only receives summary numbers, never your files or keystrokes, and AI answers can be wrong.",
       link: ["Privacy notice", "/about/#privacy"], next: ["see", "who"] },
     { id: "contact", q: "How do I contact a person?", keys: ["contact", "email", "human", "person", "talk to", "speak", "reach", "help me", "support"],
       a: "Email " + mail + " and a real person will get back to you.",
@@ -122,7 +122,7 @@
       '<form class="nb-form"><label class="sr" for="nb-in">Ask a question</label>' +
         '<input id="nb-in" type="text" autocomplete="off" maxlength="200" placeholder="Ask about the pilot, privacy, payment...">' +
         '<button type="submit" aria-label="Send"><svg class="nb-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l16-8-6 16-2-7z"/></svg></button></form>' +
-      '<p class="nb-fine">Common questions get scripted answers. Others are answered by AI (Claude) from our FAQ only, and can be wrong. We never store what you type.</p>' +
+      '<p class="nb-fine">Common questions get scripted answers. Others are answered by AI (OpenAI) from our FAQ only, and can be wrong. We never store what you type.</p>' +
     "</section>";
   document.body.appendChild(root);
 
