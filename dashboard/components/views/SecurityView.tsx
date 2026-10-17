@@ -1,6 +1,7 @@
 import Pager from "@/components/Pager";
 import PageHeader from "@/components/PageHeader";
 import Icon from "@/components/Icon";
+import SecurityHelp from "@/components/ai/SecurityHelp";
 
 export type Flag = { id: string | number; device_id: string; category: string; severity: string; detail: string | null; first_seen: string };
 
@@ -39,13 +40,13 @@ const CHECKS: [string, string][] = [
 const TONE: Record<string, string> = { low: "", medium: "warn", high: "bad", critical: "bad" };
 
 /** Security posture for a contributor's devices (live or demo). */
-export default function SecurityView({ flags, deviceNames, deviceOs, deviceCount, checkedCount, lastCheckedAgo, page = 1, hasNext = false }: {
+export default function SecurityView({ flags, deviceNames, deviceOs, deviceCount, checkedCount, lastCheckedAgo, page = 1, hasNext = false, demo = false }: {
   flags: Flag[]; deviceNames: Map<string, string>; deviceOs: Map<string, string>; deviceCount: number;
   /** Devices that have sent at least one safety check (agent 0.4.0+). */
   checkedCount: number;
   /** "2 h ago" etc. for the most recent check, or null. */
   lastCheckedAgo: string | null;
-  page?: number; hasNext?: boolean;
+  page?: number; hasNext?: boolean; demo?: boolean;
 }) {
   const unchecked = checkedCount === 0 && flags.length === 0;
   const clear = flags.length === 0 && page === 1 && !unchecked;
@@ -108,6 +109,7 @@ export default function SecurityView({ flags, deviceNames, deviceOs, deviceCount
                     </li>
                   ))}
                 </ol>
+                {fix && <SecurityHelp flagId={String(f.id)} demo={demo} />}
                 <p className="mt-4 rounded-lg bg-[var(--bg)] px-3 py-2.5 text-xs text-[var(--mut)]">
                   Until it&apos;s fixed, this device is kept out of sensitive jobs. Your idle time still counts.
                 </p>

@@ -13,6 +13,7 @@ export default async function DemoSecurityPage() {
       deviceOs={new Map(devices.map((d) => [d.id, d.os]))}
       checkedCount={devices.length}
       lastCheckedAgo="2 h ago"
+      demo
     />
   );
 }

@@ -7,6 +7,7 @@ import Reveal from "@/components/Reveal";
 import HardwareMixChart from "@/components/HardwareMixChart";
 import EconomicsPanel from "@/components/EconomicsPanel";
 import PageHeader from "@/components/PageHeader";
+import FleetBriefing from "@/components/ai/FleetBriefing";
 import { statusOf, timeAgo } from "@/components/views/DevicesView";
 
 const QUIET_MS = 24 * 3600 * 1000;
@@ -65,6 +66,8 @@ export default async function OperatorPage() {
           info="Average usable core-hours per day, from the last 7 days of agent sessions. The number to quote a buyer."
           hint={peak && peak.usable > 0 ? `Peak at ${String(peak.hour).padStart(2, "0")}:00 (${peak.usable.toFixed(1)} devices)` : "No sessions yet"} />
       </div>
+
+      <FleetBriefing />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Reveal className="card lg:col-span-2">

@@ -7,6 +7,7 @@ import type { DevicesData } from "@/lib/devicesData";
 import { toggleDevicePause, updateIdleThreshold } from "@/app/actions/controls";
 import Kpi from "@/components/Kpi";
 import Icon from "@/components/Icon";
+import DeviceInsights from "@/components/ai/DeviceInsights";
 import { statusOf, specsOf, timeAgo, lastSeenByDevice } from "@/components/views/DevicesView";
 
 const THRESHOLDS = [30, 60, 120, 300, 600, 900, 1800];
@@ -80,6 +81,8 @@ export default function DeviceDetailView({ data, demo = false, basePath }: { dat
         <Kpi icon="bolt" value={powerWeek} decimals={3} prefix="S$" label="Est. electricity, 7 days" info={EXPLAIN.electricity}
           hint={`At S$${data.electricityRate} per kWh`} />
       </div>
+
+      <DeviceInsights deviceId={device.id} demo={demo} />
 
       <section className="card">
         <div className="card-head">
